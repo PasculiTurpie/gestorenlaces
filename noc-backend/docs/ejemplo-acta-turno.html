@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Acta de turno — Nicolás Operador — 16-10-26, 10:00 p. m.</title>
+<style>
+  @page { size: A4; margin: 14mm; }
+  * { box-sizing: border-box; }
+  body { font-family: -apple-system, "Segoe UI", Roboto, Arial, sans-serif; font-size: 11px; color: #111; margin: 0; padding: 16px; position: relative; }
+  h1 { font-size: 18px; margin: 0 0 2px; }
+  h2 { font-size: 13px; margin: 18px 0 6px; padding-bottom: 3px; border-bottom: 2px solid #111; }
+  .sub { color: #555; margin-bottom: 10px; }
+  .meta { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px 14px; margin: 10px 0; }
+  .meta div { border: 1px solid #ccc; border-radius: 4px; padding: 5px 7px; }
+  .meta span { display: block; font-size: 9px; text-transform: uppercase; letter-spacing: .04em; color: #666; }
+  table { width: 100%; border-collapse: collapse; }
+  th, td { border: 1px solid #bbb; padding: 4px 6px; text-align: left; vertical-align: top; }
+  th { background: #eee; font-size: 10px; text-transform: uppercase; letter-spacing: .03em; }
+  tr { page-break-inside: avoid; }
+  .c { text-align: center; } .muted { color: #666; }
+  .badge { display: inline-block; padding: 1px 6px; border-radius: 9px; border: 1px solid #555; font-size: 10px; font-weight: 600; }
+  .badge.ok { border-color: #15803d; color: #15803d; } .badge.deg { border-color: #c2410c; color: #c2410c; }
+  .badge.down { border-color: #b91c1c; color: #b91c1c; background: #fee2e2; } .badge.mant { border-color: #1d4ed8; color: #1d4ed8; }
+  .bitacora { border: 1px solid #bbb; border-radius: 4px; padding: 8px; white-space: pre-wrap; min-height: 50px; }
+  .firmas { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; margin-top: 46px; }
+  .firmas div { border-top: 1px solid #111; padding-top: 4px; text-align: center; }
+  .pie { margin-top: 18px; color: #777; font-size: 9px; }
+  .borrador { position: fixed; top: 42%; left: 0; right: 0; text-align: center; font-size: 80px; font-weight: 800;
+              color: rgba(0,0,0,.07); transform: rotate(-25deg); pointer-events: none; }
+</style>
+</head>
+<body>
+
+<h1>Acta de cambio de turno</h1>
+<div class="sub">Turno cerrado · ID 66f0c0ffee0000000000abcd</div>
+
+<div class="meta">
+  <div><span>Operador</span>Nicolás Operador</div>
+  <div><span>Turno</span>Noche</div>
+  <div><span>Inicio</span>16-10-26, 10:00 p. m.</div>
+  <div><span>Fin</span>17-10-26, 6:05 a. m.</div>
+  <div><span>Duración</span>8 h 05 min</div>
+  <div><span>Enlaces con falla recibidos</span>3</div>
+  <div><span>Gestionados</span>3 de 3</div>
+  <div><span>Incidencias en el turno</span>2</div>
+</div>
+
+<h2>Verificación de enlaces recibidos</h2>
+<table>
+  <thead><tr><th>Enlace</th><th>Ruta</th><th>Estado recibido</th><th>Estado actual</th><th class="c">Gestionado</th><th>Acción tomada</th></tr></thead>
+  <tbody><tr>
+            <td><strong>ENL-CHIL1-VLDV-01</strong></td>
+            <td>CHIL1 → VLDV</td>
+            <td><span class="badge down">Caido</span></td>
+            <td><span class="badge ok">OK</span></td>
+            <td class="c">&#10003; Sí</td>
+            <td>Escalado a Proveedor B (INC0012345). ETA cuadrilla 02:30.</td>
+          </tr><tr>
+            <td><strong>ENL-VLDV-LAMS-01</strong></td>
+            <td>VLDV → LAMS</td>
+            <td><span class="badge deg">Degradado</span></td>
+            <td><span class="badge deg">Degradado</span></td>
+            <td class="c">&#10003; Sí</td>
+            <td>Sin cambios; se solicita limpieza de conectores.</td>
+          </tr><tr>
+            <td><strong>ENL-FRUT-PMTT-01</strong></td>
+            <td>FRUT → PMTT</td>
+            <td><span class="badge mant">Mantenimiento</span></td>
+            <td><span class="badge ok">OK</span></td>
+            <td class="c">&#10003; Sí</td>
+            <td>Ventana CHG0005521 finalizada sin novedades.</td>
+          </tr></tbody>
+</table>
+
+<h2>Incidencias durante el turno</h2>
+<table>
+  <thead><tr><th>Enlace</th><th>Severidad</th><th>Inicio</th><th>Fin</th><th>Duración</th><th>Ticket</th><th>Causa raíz</th></tr></thead>
+  <tbody><tr>
+            <td><strong>ENL-CHIL1-VLDV-01</strong></td>
+            <td><span class="badge down">Caido</span></td>
+            <td>16-10-26, 10:40 p. m.</td>
+            <td>17-10-26, 2:10 a. m.</td>
+            <td>3 h 30 min</td>
+            <td>INC0012345</td>
+            <td>Corte de fibra por obras viales</td>
+          </tr><tr>
+            <td><strong>ENL-VLDV-LAMS-01</strong></td>
+            <td><span class="badge deg">Degradado</span></td>
+            <td>16-10-26, 8:00 p. m.</td>
+            <td><em>En curso</em></td>
+            <td>—</td>
+            <td>INC0012351</td>
+            <td>—</td>
+          </tr></tbody>
+</table>
+
+<h2>Bitácora general</h2>
+<div class="bitacora">Se recibe CHIL1-VLDV caído desde las 22:40. Cuadrilla de Proveedor B en ruta.
+Se mantiene degradación en VLDV-LAMS en seguimiento.</div>
+
+<div class="firmas"><div>Operador saliente</div><div>Operador entrante / Supervisor</div></div>
+<div class="pie">Generado el 17-10-26, 10:00 a. m. (America/Santiago).</div>
+</body>
+</html>

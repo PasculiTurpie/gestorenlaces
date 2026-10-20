@@ -1,0 +1,81 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+}
+
+html, body, #root { height: 100%; }
+body {
+  margin: 0;
+  background: #090d12;
+  color: #d9e3ee;
+  font-family: "IBM Plex Sans Condensed", system-ui, "Segoe UI", sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Foco visible para teclado en todo control */
+:where(button, input, textarea, select, a, [tabindex]):focus-visible {
+  outline: 2px solid #7dd3fc;
+  outline-offset: 2px;
+}
+
+[role=dialog]:focus-visible { outline: none; }
+
+/* Barras de scroll discretas */
+* { scrollbar-width: thin; scrollbar-color: #33465c transparent; }
+
+/* ------------------------------------------------------------------ React Flow (tema NOC) */
+.react-flow {
+  --xy-background-color: transparent;
+  --xy-edge-stroke-default: #22c55e;
+  --xy-controls-button-background-color: #101720;
+  --xy-controls-button-background-color-hover: #162030;
+  --xy-controls-button-color: #d9e3ee;
+  --xy-controls-button-border-color: #223043;
+  --xy-minimap-background-color: #101720;
+  --xy-minimap-mask-background-color: rgba(9, 13, 18, 0.72);
+}
+.react-flow__attribution { background: transparent !important; color: #526579 !important; }
+.react-flow__attribution a { color: #526579 !important; }
+.react-flow__controls { box-shadow: none; border: 1px solid #223043; border-radius: 6px; overflow: hidden; }
+.react-flow__minimap { border: 1px solid #223043; border-radius: 6px; overflow: hidden; }
+.react-flow__node { cursor: default; }
+.react-flow__node.draggable { cursor: grab; }
+
+/* Los handles solo sirven de ancla de las aristas: 1px, invisibles y en el centro del nodo */
+.node-handle {
+  width: 1px !important; height: 1px !important;
+  min-width: 0 !important; min-height: 0 !important;
+  top: 50% !important; left: 50% !important;
+  opacity: 0; border: 0; background: transparent; pointer-events: none;
+}
+
+/* Con zoom alejado las etiquetas de nodo estorban: se ocultan */
+.etiquetas-ocultas .nodo-etiqueta { display: none; }
+
+/* ------------------------------------------------------------------ Estados en movimiento */
+/* Enlace caído: punteado y parpadeante */
+@keyframes noc-parpadeo { 0%, 100% { opacity: 1; } 50% { opacity: 0.2; } }
+.edge-blink { animation: noc-parpadeo 1.1s ease-in-out infinite; }
+
+/* Enlace degradado: respiración suave, más lenta que la falla total */
+@keyframes noc-respira { 0%, 100% { opacity: 1; } 50% { opacity: 0.55; } }
+.edge-degradado { animation: noc-respira 2.4s ease-in-out infinite; }
+
+/* Nodo con un enlace caído: halo que late */
+@keyframes noc-halo {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.55); }
+  50% { box-shadow: 0 0 0 7px rgba(239, 68, 68, 0); }
+}
+.nodo-caido { animation: noc-halo 1.6s ease-out infinite; }
+
+/* Entrada de modal y toasts: responde a una acción, es breve */
+@keyframes noc-entra { from { opacity: 0; transform: translateY(6px) scale(0.985); } to { opacity: 1; transform: none; } }
+.entra { animation: noc-entra 140ms ease-out; }
+
+@media (prefers-reduced-motion: reduce) {
+  .edge-blink, .edge-degradado, .nodo-caido, .entra { animation: none; }
+  .edge-blink { opacity: 1; }
+}
