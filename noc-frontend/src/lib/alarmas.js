@@ -24,8 +24,11 @@ const GRAVEDAD = { Caido: 3, Degradado: 2, Mantenimiento: 1 };
 export const ordenarAlarmas = (alarmas) =>
   [...alarmas].sort((a, b) => (GRAVEDAD[b.estado_sugerido] ?? 0) - (GRAVEDAD[a.estado_sugerido] ?? 0) || a.nombre.localeCompare(b.nombre));
 
-/** El tipo de alarma es obligatorio al pasar a Caído/Degradado, siempre que exista al menos uno que elegir. */
-export const requiereTipificacion = (estado, opciones) => esFalla(estado) && opciones.length > 0;
+/**
+ * El tipo es obligatorio al pasar a Caído, Degradado o Mantenimiento (así todos saben de qué se trata), siempre que exista
+ * al menos uno que elegir. Al volver a OK no se pide.
+ */
+export const requiereTipificacion = (estado, opciones) => estado !== 'OK' && opciones.length > 0;
 
 /** Filamentos de un enlace que NO están en OK. */
 export const filamentosAlarmados = (enlace) => enlace.filamentos.filter((f) => f.estado !== 'OK');

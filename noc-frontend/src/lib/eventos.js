@@ -37,6 +37,15 @@ export function describirEvento(tipo, p, miId) {
       return { texto: `Nuevo nodo ${p.node?.id_nodo} · ${quien(p.por, miId)}`, nivel: 'info', notificar: false };
     case 'node:deleted':
       return { texto: `Nodo ${p.id_nodo} eliminado · ${quien(p.por, miId)}`, nivel: 'warn', notificar: false };
+    case 'maintenance:changed': {
+      const verbo = { programado: 'programó', editado: 'editó', iniciado: 'inició', finalizado: 'finalizó', cancelado: 'canceló' }[p.accion] ?? 'actualizó';
+      const enlaces = `${p.enlaces} enlace${p.enlaces === 1 ? '' : 's'}`;
+      return { texto: `${quien(p.por, miId)} ${verbo} el mantenimiento «${p.titulo}» (${enlaces})`, nivel: p.accion === 'iniciado' ? 'warn' : 'info', notificar: p.por?.id !== miId };
+    }
+    case 'services:changed': {
+      const base = { creado: 'creó un servicio', editado: 'editó un servicio', eliminado: 'eliminó un servicio', importado: `importó servicios (${p.creados ?? 0} nuevos, ${p.actualizados ?? 0} actualizados)`, 'enlace-eliminado': 'actualizó los servicios por un enlace eliminado' }[p.accion] ?? 'actualizó los servicios';
+      return { texto: `${quien(p.por, miId)} ${base}`, nivel: 'info', notificar: false };
+    }
     case 'shift:opened':
       return { texto: `${p.operador?.nombre ?? 'Un operador'} abrió el turno ${p.tipo_turno?.toLowerCase() ?? ''} (${p.pendientes} enlace(s) por revisar)`, nivel: 'info', notificar: false };
     case 'shift:closed':

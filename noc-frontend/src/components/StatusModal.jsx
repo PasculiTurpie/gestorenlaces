@@ -12,6 +12,8 @@ import { useAuth } from '../store/authStore.js';
 import { useTopology } from '../store/topologyStore.js';
 import { Campo, entrada } from './admin/ui.jsx';
 import DetalleAlarma from './alarmas/DetalleAlarma.jsx';
+import BannerMantenimiento from './mantenimientos/Banner.jsx';
+import ServiciosDelEnlace from './servicios/ServiciosDelEnlace.jsx';
 import EstadoBadge from './EstadoBadge.jsx';
 
 const ORDEN = ['OK', 'Degradado', 'Caido', 'Mantenimiento'].filter((e) => ESTADOS.includes(e));
@@ -152,6 +154,9 @@ function ModalEnlace({ enlace, onClose }) {
             {abierta && <> · incidencia abierta desde {fechaHora(abierta.inicio)}</>}
             {' '}(el estado del enlace es el peor de sus dos filamentos)
           </p>
+
+          <BannerMantenimiento enlaceId={enlace._id} />
+          <ServiciosDelEnlace enlace={enlace} />
 
           <section aria-label="Filamentos del enlace" className="mb-5">
             <div className="mb-2 flex items-center justify-between">

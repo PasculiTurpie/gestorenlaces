@@ -128,6 +128,38 @@ export const api = {
   eliminarAdjunto: (id) => request(`/api/adjuntos/${id}`, { method: 'DELETE' }),
   descargarAdjunto: (id, { enLinea = false } = {}) => requestBlob(`/api/adjuntos/${id}/archivo${enLinea ? '?disposicion=inline' : ''}`),
 
+  // Mantenimientos programados / en curso. `estado`: lista separada por comas (por defecto, los activos)
+  mantenimientos: (q = {}) => {
+    const qs = new URLSearchParams(Object.entries(q).filter(([, v]) => v !== undefined && v !== '')).toString();
+    return request(`/api/maintenance${qs ? `?${qs}` : ''}`);
+  },
+  crearMantenimiento: (body) => request('/api/maintenance', { method: 'POST', body }),
+  actualizarMantenimiento: (id, body) => request(`/api/maintenance/${id}`, { method: 'PATCH', body }),
+  iniciarMantenimiento: (id, body = {}) => request(`/api/maintenance/${id}/start`, { method: 'POST', body }),
+  finalizarMantenimiento: (id, body = {}) => request(`/api/maintenance/${id}/finish`, { method: 'POST', body }),
+  cancelarMantenimiento: (id, body) => request(`/api/maintenance/${id}/cancel`, { method: 'POST', body }),
+
+  // Servicios que pasan por cada enlace
+  servicios: (q = {}) => {
+    const qs = new URLSearchParams(Object.entries(q).filter(([, v]) => v !== undefined && v !== '')).toString();
+    return request(`/api/services${qs ? `?${qs}` : ''}`);
+  },
+  serviciosResumen: () => request('/api/services/resumen'), // { servicios, por_enlace: { enlaceId: n } }
+  crearServicio: (body) => request('/api/services', { method: 'POST', body }),
+  actualizarServicio: (id, body) => request(`/api/services/${id}`, { method: 'PATCH', body }),
+  eliminarServicio: (id) => request(`/api/services/${id}`, { method: 'DELETE' }),
+  // Importar desde Excel (.xlsx) o texto. Sin `mapeo` devuelve las columnas; con `mapeo` la vista previa; con `confirmar`, guarda.
+  importarServicios: (archivo, { mapeo, modo, confirmar, hoja, filaEncabezado } = {}) => {
+    const form = new FormData();
+    form.append('archivo', archivo);
+    if (mapeo) form.append('mapeo', JSON.stringify(mapeo));
+    if (modo) form.append('modo', modo);
+    if (confirmar) form.append('confirmar', 'true');
+    if (hoja) form.append('hoja', hoja);
+    if (filaEncabezado) form.append('fila_encabezado', String(filaEncabezado));
+    return request('/api/services/import', { method: 'POST', form });
+  },
+
   zonales: () => request('/api/zonales'),
   crearZonal: (body) => request('/api/zonales', { method: 'POST', body }),
   actualizarZonal: (id, body) => request(`/api/zonales/${id}`, { method: 'PUT', body }),

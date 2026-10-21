@@ -11,6 +11,7 @@ import { useTopology } from '../../store/topologyStore.js';
 import { Aviso, Boton, Campo, Dialogo, entrada } from '../admin/ui.jsx';
 import ChecklistTabla from './ChecklistTabla.jsx';
 import { avisoContinuidad, etiquetaTurno, rangoTurno } from '../../lib/horarios.js';
+import MantenimientosTurno from '../mantenimientos/MantenimientosTurno.jsx';
 import TurnoAnterior from './TurnoAnterior.jsx';
 import VistaPreviaActa from './VistaPreviaActa.jsx';
 
@@ -173,6 +174,7 @@ export default function TurnoActual() {
   if (!acta) {
     return (
       <div className="mx-auto max-w-3xl space-y-5">
+        <MantenimientosTurno />
         {anterior ? (
           <>
             <p className="text-sm text-noc-muted">Antes de abrir tu turno, lee lo que dejó el turno anterior.</p>
@@ -206,6 +208,7 @@ export default function TurnoActual() {
       </div>
 
       {/* Desplegado mientras el operador no empieza el checklist; plegado si ya avanzó (p. ej. al recargar la página) */}
+      {!acta.cerrado && <MantenimientosTurno className="mb-4" />}
       {anterior && !acta.cerrado && <div className="mb-4"><TurnoAnterior acta={anterior} aviso={avisoContinuidad(horarios, acta.tipo_turno, anterior)} inicialAbierto={!acta.items.some(itemResuelto)} /></div>}
 
       <div className="mb-4 rounded-lg border border-noc-line bg-noc-panel px-4 py-3">

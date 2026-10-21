@@ -1,6 +1,7 @@
 import { BaseEdge, EdgeLabelRenderer } from '@xyflow/react';
 import { memo, useState } from 'react';
 import { ESTADO_META, estiloEnlace } from '../lib/estados.js';
+import { ESTADOS_ACTIVOS } from '../lib/mantenimientos.js';
 import { desplazamientoTarjeta, puntoEnTrazado, trazadoEnlace, trazadoFilamento } from '../lib/geometria.js';
 import { useTopology } from '../store/topologyStore.js';
 import MarcadorMedio from './MarcadorMedio.jsx';
@@ -15,6 +16,11 @@ function Flecha({ x, y, ang, color }) {
 function EnlaceNOC({ id, sourceX: sx, sourceY: sy, targetX: tx, targetY: ty, data, selected }) {
   const [hover, setHover] = useState(false);
   const { estado, offset, expandido, tipo, filamentos, id_enlace } = data;
+  // mantenimiento activo sobre este enlace (el que está en curso tiene prioridad)
+  const mantenimiento = useTopology((s) => {
+    const del = s.mantenimientos.filter((m) => ESTADOS_ACTIVOS.includes(m.estado) && m.enlaces.some((e) => (e._id ?? e) === id));
+    return del.find((m) => m.estado === 'En curso') ?? del[0] ?? null;
+  });
   const base = trazadoEnlace(sx, sy, tx, ty, offset);
   const { className, ...estilo } = estiloEnlace(estado, selected || hover);
   const color = ESTADO_META[estado]?.color ?? '#22c55e';
@@ -55,7 +61,7 @@ function EnlaceNOC({ id, sourceX: sx, sourceY: sy, targetX: tx, targetY: ty, dat
       )}
 
       <EdgeLabelRenderer>
-        <MarcadorMedio x={base.labelX} y={base.labelY} expandido={expandido} tipo={tipo} idEnlace={id_enlace} onToggle={alternar} parcial={parcial} />
+        <MarcadorMedio x={base.labelX} y={base.labelY} expandido={expandido} tipo={tipo} idEnlace={id_enlace} onToggle={alternar} parcial={parcial} mantenimiento={mantenimiento} />
         {expandido && (
           <TarjetaFilamentos x={base.labelX + tarjeta.x} y={base.labelY + tarjeta.y} idEnlace={id_enlace} tipo={tipo} filamentos={filamentos} onAbrir={abrir} />
         )}

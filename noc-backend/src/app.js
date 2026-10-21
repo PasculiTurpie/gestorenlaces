@@ -8,6 +8,8 @@ import alarmTypeRoutes from './routes/alarmType.routes.js';
 import authRoutes from './routes/auth.routes.js';
 import incidentRoutes from './routes/incident.routes.js';
 import linkRoutes from './routes/link.routes.js';
+import serviceRoutes from './routes/service.routes.js';
+import maintenanceRoutes from './routes/maintenance.routes.js';
 import linkTypeRoutes from './routes/linkType.routes.js';
 import nodeRoutes from './routes/node.routes.js';
 import shiftRoutes from './routes/shift.routes.js';
@@ -36,6 +38,8 @@ export function createApp() {
   app.use('/api/alarm-types', alarmTypeRoutes);
   app.use('/api/adjuntos', adjuntoRoutes);
   app.use('/api/sistema', sistemaRoutes);
+  app.use('/api/maintenance', maintenanceRoutes);
+  app.use('/api/services', serviceRoutes);
 
   app.use(notFound);
   app.use(errorHandler);

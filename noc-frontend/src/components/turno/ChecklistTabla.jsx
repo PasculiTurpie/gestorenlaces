@@ -1,6 +1,8 @@
 import { BookOpen } from 'lucide-react';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
+import { Wrench } from 'lucide-react';
 import { alarmasConProcedimiento, resumenAlarmas } from '../../lib/alarmas.js';
+import { porEnlace, situacion, ventanaTexto } from '../../lib/mantenimientos.js';
 import { ESTADO_META } from '../../lib/estados.js';
 import { useTopology } from '../../store/topologyStore.js';
 import ProcedimientoDialog from '../alarmas/ProcedimientoDialog.jsx';
@@ -17,6 +19,8 @@ export default function ChecklistTabla({ items, editable, estadoActual, onGestio
   const [borradores, setBorradores] = useState({}); // texto en edición por enlace
   const [verProcedimiento, setVerProcedimiento] = useState(null); // enlace cuyo procedimiento se consulta
   const catalogo = useTopology((s) => s.alarmas);
+  const mantenimientos = useTopology((s) => s.mantenimientos);
+  const mantPorEnlace = useMemo(() => porEnlace(mantenimientos), [mantenimientos]); // se está trabajando / se va a trabajar en el enlace
 
   if (items.length === 0) {
     return <p className="rounded-lg border border-noc-line px-4 py-8 text-center text-sm text-noc-muted">Se recibió el turno sin enlaces con falla. No hay nada que verificar.</p>;
@@ -69,6 +73,12 @@ export default function ChecklistTabla({ items, editable, estadoActual, onGestio
                       )}
                     </div>
                   )}
+                  {(mantPorEnlace[i.enlaceId] ?? []).map((m) => (
+                    <p key={m._id} className="mt-1.5 flex max-w-[22rem] items-start gap-1.5 text-xs leading-snug text-sky-300">
+                      <Wrench size={12} className="mt-0.5 shrink-0" aria-hidden="true" />
+                      <span>{m.estado === 'En curso' ? 'Se está trabajando' : 'Se va a trabajar'}: {m.titulo} · {situacion(m).etiqueta.toLowerCase()} · {ventanaTexto(m)}</span>
+                    </p>
+                  ))}
                   {notasPrevias[i.enlaceId] && (
                     <p className="mt-1.5 max-w-[22rem] text-xs leading-snug text-noc-muted">
                       <span className="font-medium text-noc-focus">Turno anterior:</span> {notasPrevias[i.enlaceId].accion}

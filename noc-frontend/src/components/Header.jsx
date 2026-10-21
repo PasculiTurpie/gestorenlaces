@@ -42,6 +42,7 @@ export default function Header() {
       <nav aria-label="Secciones" className="flex items-center gap-1">
         <NavLink to="/" end className={enlaceNav}>Mapa</NavLink>
         <NavLink to="/turno" className={enlaceNav}>Turno</NavLink>
+        <NavLink to="/mantenimientos" className={enlaceNav}>Mantenimientos</NavLink>
         <NavLink to="/indicadores" className={enlaceNav}>Indicadores</NavLink>
         <NavLink to="/alarmas" className={enlaceNav}>Alarmas</NavLink>
         {esGestor(user?.rol) && <NavLink to="/admin" className={enlaceNav}>Administración</NavLink>}

@@ -1,10 +1,10 @@
-import { Minus, Plus } from 'lucide-react';
+import { Minus, Plus, Wrench } from 'lucide-react';
 
 /**
  * El "+" del punto medio de cada enlace (como en el NMS): despliega/pliega sus dos filamentos.
  * Los enlaces de otra telco llevan el color de su tipo para distinguirlos de la red propia.
  */
-export default function MarcadorMedio({ x, y, expandido, tipo, idEnlace, onToggle, parcial = null }) {
+export default function MarcadorMedio({ x, y, expandido, tipo, idEnlace, onToggle, parcial = null, mantenimiento = null }) {
   const ajeno = tipo && !tipo.propio;
   const color = ajeno ? tipo.color : '#5b7088';
 
@@ -13,7 +13,7 @@ export default function MarcadorMedio({ x, y, expandido, tipo, idEnlace, onToggl
       type="button"
       aria-expanded={expandido}
       aria-label={`${expandido ? 'Plegar' : 'Desplegar'} los filamentos de ${idEnlace}`}
-      title={`${idEnlace}${ajeno ? ` · ${tipo.nombre}` : ''}${parcial ? ` · alarma solo en la ${parcial.sentido}` : ''}`}
+      title={`${idEnlace}${ajeno ? ` · ${tipo.nombre}` : ''}${parcial ? ` · alarma solo en la ${parcial.sentido}` : ''}${mantenimiento ? ` · ${mantenimiento.estado === 'En curso' ? 'Se está trabajando' : 'Mantenimiento programado'}: ${mantenimiento.titulo}` : ''}`}
       onClick={(e) => { e.stopPropagation(); onToggle(); }}
       className="nodrag nopan flex h-4 w-4 items-center justify-center rounded-[3px] border bg-noc-panel text-noc-text hover:brightness-125"
       style={{
@@ -27,6 +27,8 @@ export default function MarcadorMedio({ x, y, expandido, tipo, idEnlace, onToggl
     >
       {expandido ? <Minus size={10} strokeWidth={3} /> : <Plus size={10} strokeWidth={3} />}
       {/* alarma en un solo filamento: punto del color de su estado (el detalle está al desplegar) */}
+      {/* se está trabajando (o se va a trabajar) en este enlace: llave azul */}
+      {mantenimiento && <span aria-hidden="true" className="absolute -bottom-2 -right-2 flex h-3.5 w-3.5 items-center justify-center rounded-full border border-noc-bg" style={{ background: mantenimiento.estado === 'En curso' ? '#38bdf8' : '#60a5fa' }}><Wrench size={8} strokeWidth={3} color="#0b1220" /></span>}
       {parcial && <span aria-hidden="true" className="absolute -right-1 -top-1 h-2 w-2 rounded-full border border-noc-bg" style={{ background: parcial.color }} />}
     </button>
   );

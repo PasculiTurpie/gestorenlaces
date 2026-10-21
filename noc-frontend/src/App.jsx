@@ -6,11 +6,13 @@ import EnlacesAdmin from './components/admin/EnlacesAdmin.jsx';
 import NodosAdmin from './components/admin/NodosAdmin.jsx';
 import TiposAdmin from './components/admin/TiposAdmin.jsx';
 import SistemaAdmin from './components/admin/SistemaAdmin.jsx';
+import ServiciosAdmin from './components/servicios/ServiciosAdmin.jsx';
 import UsuariosAdmin from './components/admin/UsuariosAdmin.jsx';
 import ZonalesAdmin from './components/admin/ZonalesAdmin.jsx';
 import GuiaAlarmas from './components/alarmas/GuiaAlarmas.jsx';
 import Consola from './components/Consola.jsx';
 import LoginPage from './components/LoginPage.jsx';
+import MantenimientosPage from './components/mantenimientos/MantenimientosPage.jsx';
 import MapaPage from './components/MapaPage.jsx';
 import TurnoPage from './components/turno/TurnoPage.jsx';
 import { useAuth } from './store/authStore.js';
@@ -29,11 +31,13 @@ export default function App() {
         <Route element={<Consola />}>
           <Route index element={<MapaPage />} />
           <Route path="turno" element={<TurnoPage />} />
+          <Route path="mantenimientos" element={<MantenimientosPage />} />
           <Route path="alarmas" element={<GuiaAlarmas />} />
           <Route path="indicadores" element={<Suspense fallback={<p className="p-6 text-sm text-noc-muted">Cargando indicadores…</p>}><IndicadoresPage /></Suspense>} />
           <Route path="admin" element={<AdminLayout />}>
             <Route path="usuarios" element={<UsuariosAdmin />} />
             <Route path="nodos" element={<NodosAdmin />} />
+            <Route path="servicios" element={<ServiciosAdmin />} />
             <Route path="enlaces" element={<EnlacesAdmin />} />
             <Route path="tipos" element={<TiposAdmin />} />
             <Route path="zonales" element={<ZonalesAdmin />} />

@@ -1,3 +1,6 @@
+import { Link } from 'react-router-dom';
+import ListaMantenimientos from './mantenimientos/Lista.jsx';
+import { relevantes } from '../lib/mantenimientos.js';
 import { X } from 'lucide-react';
 import { useMemo } from 'react';
 import { useFocus } from '../hooks/useFocus.js';
@@ -39,6 +42,7 @@ function Resumen() {
 }
 
 function ItemEnlace({ l, ahora, onClick }) {
+  const servicios = useTopology((st) => st.serviciosPorEnlace[l._id] ?? 0); // cuántos servicios pasan por este enlace
   return (
     <li>
       <button type="button" onClick={() => onClick(l)} className="w-full border-b border-noc-line/60 px-4 py-2.5 text-left hover:bg-noc-raised">
@@ -51,6 +55,7 @@ function ItemEnlace({ l, ahora, onClick }) {
           <span className="shrink-0 tabular-nums">{hace(l.estado_desde, ahora)}</span>
         </div>
         {l.estado !== 'OK' && resumenAlarmas(l) && <div className="mt-0.5 font-mono text-[11px]" style={{ color: ESTADO_META[l.estado].color }}>{resumenAlarmas(l)}</div>}
+        {l.estado !== 'OK' && servicios > 0 && <div className="mt-0.5 text-[11px] text-noc-muted">Afecta {servicios} servicio{servicios === 1 ? '' : 's'}</div>}
       </button>
     </li>
   );
@@ -129,12 +134,30 @@ function Actividad() {
   );
 }
 
+/** Mantenimientos en curso y próximos (48 h): todos los ven sin salir del mapa. */
+function Mantenimientos() {
+  const lista = useTopology((s) => s.mantenimientos);
+  const ahora = useNow();
+  const rel = useMemo(() => relevantes(lista, ahora, 48), [lista, ahora]);
+  if (!rel.length) return null;
+  return (
+    <section aria-label="Mantenimientos" className="max-h-64 shrink-0 overflow-auto border-b border-noc-line">
+      <h2 className="sticky top-0 z-10 flex items-center justify-between border-b border-noc-line bg-noc-panel px-4 py-2 text-sm font-semibold">
+        <span>Mantenimientos <span className="ml-1 font-normal text-noc-muted">{rel.length}</span></span>
+        <Link to="/mantenimientos" className="text-xs font-normal text-noc-focus hover:underline">Ver todos</Link>
+      </h2>
+      <ListaMantenimientos lista={rel.slice(0, 6)} compacto />
+    </section>
+  );
+}
+
 export default function Sidebar() {
   const abierto = useTopology((s) => s.sidebarAbierto);
   if (!abierto) return null;
   return (
     <aside className="flex w-[22rem] max-w-[85vw] shrink-0 flex-col border-l border-noc-line bg-noc-panel max-lg:absolute max-lg:bottom-0 max-lg:right-0 max-lg:top-12 max-lg:z-20 max-lg:shadow-2xl">
       <Resumen />
+      <Mantenimientos />
       <PanelNodo />
       <Alarmas />
       <Actividad />

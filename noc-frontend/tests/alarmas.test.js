@@ -25,7 +25,7 @@ test('tipos de alarma para un estado: activos, los del estado primero, luego por
   assert.deepEqual(alarmasParaEstado(cat, 'Caido').map((a) => a.codigo), ['CORTE', 'LOS', 'ATEN']);          // sin la desactivada
   assert.deepEqual(alarmasParaEstado(cat, 'Degradado').map((a) => a.codigo), ['ATEN', 'CORTE', 'LOS']);
   assert.equal(requiereTipificacion('Caido', cat), true); assert.equal(requiereTipificacion('Degradado', cat), true);
-  assert.equal(requiereTipificacion('Mantenimiento', cat), false); assert.equal(requiereTipificacion('OK', cat), false);
+  assert.equal(requiereTipificacion('Mantenimiento', cat), true, 'Mantenimiento también se tipifica: todos saben qué trabajo se hace'); assert.equal(requiereTipificacion('OK', cat), false);
   assert.equal(requiereTipificacion('Caido', []), false, 'sin tipos configurados no se bloquea la operación');
 });
 

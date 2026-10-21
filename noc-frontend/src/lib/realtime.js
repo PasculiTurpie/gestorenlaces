@@ -30,6 +30,8 @@ export function iniciarTiempoReal(token) {
     'linktype:changed': () => T().cargar({ silencioso: true }), // cambian nombres/colores que viajan dentro de cada enlace
     'zonal:changed': () => T().cargar({ silencioso: true }),
     'alarmtype:changed': () => T().cargar({ silencioso: true }), // cambia el significado/procedimiento que viaja con cada alarma
+    'maintenance:changed': (p) => { T().cargarMantenimientos(); registrar('maintenance:changed', p); }, // todos se enteran en el momento
+    'services:changed': (p) => { T().cargarServicios(); registrar('services:changed', p); }, // cambian los servicios de los enlaces
     'shift:opened': (p) => registrar('shift:opened', p),
     'shift:closed': (p) => registrar('shift:closed', p),
     'node:deleted': (p) => { T().quitarNodo(p.id_nodo); registrar('node:deleted', p); },

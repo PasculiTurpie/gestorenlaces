@@ -5,7 +5,7 @@ React 18 · Vite 5 · Tailwind 3 · @xyflow/react (React Flow 12) · Zustand · 
 ```bash
 npm install
 npm run dev        # http://localhost:5173  (el backend debe estar en :4000)
-npm test           # lógica pura y store (74 pruebas, sin navegador)
+npm test           # lógica pura y store (87 pruebas, sin navegador)
 npm run build      # genera dist/
 ```
 
@@ -22,7 +22,7 @@ así que no hay CORS ni configuración extra. Para producción sirviendo el fron
   - Enlaces paralelos entre el mismo par de nodos se separan en curvas.
   - Etiquetas de nodo se ocultan al alejar el zoom; minimapa y controles.
 - **Alarmas por filamento y tipificación:** al registrar una alarma se elige si afecta a la **ida, la vuelta o ambas**, el nuevo
-  estado y la **tipificación** (LOS, CORTE, ATEN…); al elegirla aparece su **significado, el procedimiento a seguir (pasos),
+  estado y la **tipificación** (R_LOS, SPAN_LOSS_EXCEED_EOL, BEFFEC_EXC…); al elegirla aparece su **significado, el procedimiento a seguir (pasos),
   el escalamiento y el tiempo de respuesta**. Cada filamento tiene su propio estado; el del enlace es el peor de los dos.
   La misma ficha está en la **Guía de alarmas** (`#/alarmas`, todos los roles), en el procedimiento de cada enlace del checklist
   del turno y en el modal del enlace. En el mapa, al desplegar un enlace cada filamento se dibuja con el color de SU estado y el
@@ -30,6 +30,13 @@ así que no hay CORS ni configuración extra. Para producción sirviendo el fron
 - **Horario de los turnos** (Mañana 08:00–15:30, Tarde 15:30–23:00, Noche 23:00–08:00; lo define el backend): al abrir se propone el turno que corresponde por la hora
   (no el asignado al usuario) y se ve el horario en el selector y en el encabezado. Si el último turno cerrado no es el que corresponde (p. ej. se entra a la mañana
   y el último acta es de la tarde), el traspaso muestra un aviso: puede que el turno intermedio no se haya registrado.
+- **Servicios por enlace:** al consultar un enlace se ve qué servicios pasan por él («Servicios afectados» si tiene una falla o está en mantenimiento), y en las alarmas activas de la barra lateral
+  cuántos servicios afecta cada una. Un Supervisor o Admin los administra en Administración → Servicios: listado con búsqueda, alta/edición manual y **Importar Excel / texto** (asistente en 4 pasos: archivo,
+  columnas —se reconocen solas por su encabezado—, vista previa sin guardar y resultado). Admite `.xlsx`, `.txt` y `.csv`; el enlace puede venir por su código, por los nodos que une o como recorrido.
+- **Mantenimientos** (menú «Mantenimientos»): se programa un trabajo con enlaces, tipificación de mantenimiento, ventana, ticket y si hay corte, y todos lo ven *antes* de que empiece:
+  en la barra lateral del mapa (48 h), con una llave azul sobre el enlace, en la ficha del enlace y en el cambio de turno (bloque y nota en cada fila del checklist). Al **iniciarlo** sus enlaces pasan
+  a Mantenimiento y al **finalizarlo** vuelven a OK; se puede editar, cancelar (con motivo) y consultar el historial. Los cambios llegan en tiempo real a todas las consolas. Pasar un enlace a
+  Mantenimiento por el modal también exige elegir la tipificación.
 - **Fecha del turno:** un turno pertenece al día en que empieza (Mañana, Tarde) o en que termina (Noche: quien entra el 19 a las 23:00 hace el turno noche del 20). Se muestra así en el
   encabezado, el historial (con la hora real de inicio debajo), el detalle, el traspaso y el acta; el filtro del historial busca por esta fecha.
 - **Traspaso de turno:** antes de abrir el turno, el operador lee lo que dejó el turno anterior (su bitácora y los enlaces que siguen sin estar en OK, con el estado

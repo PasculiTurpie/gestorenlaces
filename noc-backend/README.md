@@ -28,7 +28,7 @@ npm run seed:nodos                         # upsert de nodos (conserva posicione
 npm run seed:nodos -- --reset-pos          # reaplica las posiciones del catálogo
 npm run seed:nodos -- --prune              # borra nodos obsoletos (los que tengan enlaces se conservan)
 npm run seed:tipos                         # tipos de línea base: Propio, WOM, Tigo, Claro, Entel (idempotente)
-npm run seed:alarmas                       # tipificación de alarmas de partida: LOS, LOF, CORTE, ATEN, SD, ENERGIA, EQUIPO, TERCEROS, MANT (idempotente)
+npm run seed:alarmas                       # catálogo de alarmas DWDM (14); renombra SPAN_LOSS y desactiva las genéricas anteriores (idempotente)
 npm run seed:enlaces                       # crea los enlaces que falten y completa tipo/filamentos de los existentes (conserva estados)
 ```
 
@@ -54,6 +54,71 @@ Las cargas parciales (`seed:nodos`, `seed:enlaces`) son idempotentes y no tocan 
   procedimientos, escalamientos y tiempos a su operación real.
 - El evento `link:updated` trae `cambio: { de, a, filamentos, fibraDe, fibraA, tipificacion }` (de/a = estado del enlace;
   fibraDe/fibraA = lo que cambió en los filamentos).
+
+## Catálogo de alarmas DWDM
+
+`npm run seed:alarmas` deja la tipificación según el catálogo DWDM (Huawei) de `scripts/lib/alarmasBase.js`: BEFFEC_EXC, SPAN_LOSS_EXCEED_EOL, SPAN_LOSS_EXCEED_BOL,
+R_LOS, R_LOF, HARD_BAD, IN_PWR_HIGH, IN_PWR_LOW, MUT_LOS, OSC_LOS, TEMP_ALAM, OTU_LOF, ODU_AIS y FAN_FAIL. Cada una trae su definición (nombre) y su causa común (significado);
+**no trae procedimientos, escalamientos ni tiempos**: son de la operación y se cargan en Administración → Alarmas (pasos propios y/o documentos adjuntos).
+El estado sugerido (Caído/Degradado) es una propuesta que solo ordena las opciones al registrar; un Admin puede cambiarlo.
+
+Es idempotente y no pisa lo que ya se editó:
+- **Renombra** `SPAN_LOSS` → `SPAN_LOSS_EXCEED_EOL` conservando el mismo registro (procedimiento, escalamiento, tiempo y documentos adjuntos).
+- **Crea** las que falten; las que ya existen no se modifican.
+- **Desactiva** las genéricas de la primera versión (LOS, LOF, CORTE, ATEN, SD, ENERGIA, EQUIPO, TERCEROS, MANT) sin borrarlas, para no perder el historial de incidencias.
+  Con `npm run seed:alarmas -- --conservar-genericas` no se desactivan. Las que no tengan uso se pueden eliminar desde Administración → Alarmas.
+- Informa los conflictos (por ejemplo, un nombre ya usado por otra tipificación) en lugar de ocultarlos.
+
+Incluye dos tipificaciones de **mantenimiento** (`MANT_PROG` programado y `MANT_CORR` correctivo), con estado sugerido «Mantenimiento»; un Admin puede agregar más
+(p. ej. cambio de tarjeta, limpieza de conectores) con ese mismo estado sugerido. Para que existan en una base ya cargada, ejecute `npm run seed:alarmas` (no modifica lo que ya existe).
+Desde ahora **pasar un enlace a Mantenimiento también exige elegir la tipificación**, igual que Caído y Degradado.
+
+## Servicios que pasan por cada enlace
+
+Cada servicio (una señal de TV, un circuito de datos…) tiene nombre, cliente, tipo, capacidad, código y observación, y **los enlaces por los que pasa** (en orden). Sirve para saber
+a qué servicios afecta una falla o un mantenimiento: se ve al consultar un enlace y, en las alarmas activas, cuántos servicios afecta cada una. El nombre identifica al servicio
+(sin distinguir mayúsculas ni tildes), por eso volver a subir un archivo no duplica nada.
+
+| Ruta | Rol mínimo | Descripción |
+|---|---|---|
+| `GET /api/services?enlace=&q=&page=&limit=` | auth | `enlace`: código o id → los servicios que pasan por él. `q`: nombre, cliente, tipo o código |
+| `GET /api/services/resumen` | auth | `{ servicios, por_enlace: { <idEnlace>: n } }` |
+| `POST /api/services` · `PATCH /api/services/:id` · `DELETE /api/services/:id` | Supervisor | Alta, edición (los enlaces se reemplazan, conservando el orden indicado) y baja |
+| `POST /api/services/import` | Supervisor | Importación desde Excel o texto (ver abajo) |
+
+Al eliminar un enlace, sale de los servicios que lo referían.
+
+**Importación** (`multipart/form-data`: `archivo` + campos). El navegador envía el mismo archivo en tres fases:
+1. sin `mapeo` → `fase: "columnas"`: hojas, columnas con una muestra, las primeras filas y el mapeo sugerido por los encabezados;
+2. con `mapeo` (JSON con el índice de cada columna) → `fase: "vista_previa"`: qué se crearía/actualizaría y qué filas tienen problemas. **No guarda nada**;
+3. con `confirmar=true` → `fase: "aplicado"`: guarda. Las filas con problemas se omiten y se informan; repetir el archivo no cambia nada.
+
+Campos: `mapeo`, `modo` (`agregar` suma enlaces a los que ya tiene; `reemplazar` sustituye la ruta, solo para servicios que el archivo trae con enlaces válidos), `confirmar`, `hoja`, `fila_encabezado`.
+
+- **Formatos:** `.xlsx` (no `.xls`: «Guardar como .xlsx»), `.txt` y `.csv` (se detecta tabulador, `;`, `,` o `|`; UTF-8 o Windows-1252; comillas). Fórmulas: se lee su valor guardado. Celdas combinadas
+  verticalmente: el servicio se repite en cada fila. Se rechazan libros con macros.
+- **Límites:** 5 MB, 20 000 filas, 40 columnas y 100 MB al descomprimir (protege de «bombas ZIP»).
+- **Enlace:** una columna con el código (`ENL-VLDV-LANC-01`, o sin el prefijo), los nodos que une (`VLDV-LANC`, `VLDV → LANC`, `LANC ⇄ VLDV`) o un recorrido (`VLDV → LANC → PNGP` = dos enlaces); varios
+  separados por coma, `;` o salto de línea. También sirven dos columnas, origen y destino. Si hay más de un enlace entre los mismos nodos, se pide el código. Si algo del recorrido no se reconoce, no se toma nada de esa referencia.
+
+## Mantenimientos programados y en curso
+
+Para que todo el NOC sepa que se va a trabajar (o se está trabajando) en uno o varios enlaces. Un mantenimiento tiene título, enlaces (1–50), tipificación de mantenimiento,
+ventana (inicio y fin previsto), ticket, descripción y si se prevé corte. Estados: **Programado → En curso → Finalizado**, o **Cancelado** (solo si no se inició).
+
+| Ruta | Rol mínimo | Descripción |
+|---|---|---|
+| `GET /api/maintenance?estado=&enlace=&desde=&hasta=` | auth | Por defecto, los activos (Programado y En curso). `estado` admite una lista: `Finalizado,Cancelado` |
+| `GET /api/maintenance/:id` | auth | Con historial |
+| `POST /api/maintenance` | Operador | Programa uno (no modifica enlaces; el fin no puede estar en el pasado) |
+| `PATCH /api/maintenance/:id` | Operador | Edita; en curso no se cambian enlaces, tipificación ni inicio |
+| `POST /api/maintenance/:id/start` | Operador | Los enlaces pasan a **Mantenimiento** (con la tipificación y el ticket) |
+| `POST /api/maintenance/:id/finish` | Operador | Los filamentos que sigan en Mantenimiento vuelven a **OK** |
+| `POST /api/maintenance/:id/cancel` | Operador | Solo Programado; exige `motivo` |
+
+Iniciar y finalizar usan el mismo cambio de estado auditado que el resto (timeline del enlace e incidencias coherentes) y avisan por Socket.io (`link:updated` por cada enlace y
+`maintenance:changed`). Si algún enlace no se puede actualizar, el resto sí se aplica y la respuesta trae `resultado.fallidos`; finalizar con errores deja el mantenimiento En curso
+para reintentar. Lo que cambió durante el trabajo se respeta (un enlace que volvió a fallar no se pisa). No hay procesos automáticos: iniciar y finalizar son acciones del operador.
 
 ## Horario de los turnos
 

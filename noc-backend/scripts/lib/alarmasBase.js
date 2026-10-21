@@ -1,149 +1,103 @@
 import { AlarmType } from '../../src/models/AlarmType.js';
 
 /**
- * Tipificaciones de alarma de PARTIDA para una red óptica de transporte. El significado y los procedimientos son
- * genéricos (buenas prácticas habituales): deben revisarse y ajustarse a los procedimientos, contactos y tiempos
- * reales de la operación. Un Admin los edita desde Administración → Alarmas.
+ * Tipificación de alarmas de la red DWDM (Huawei), tal como la define la operación: código de la alarma, su definición
+ * (nombre) y su causa común (significado). NO incluye procedimientos, escalamientos ni tiempos de respuesta: son de la
+ * operación y los carga un Admin desde Administración → Alarmas (pasos propios y/o documentos .docx/.pdf/.xlsx adjuntos).
+ *
+ * `estado_sugerido` es una PROPUESTA (con qué estado se registra normalmente cada alarma) y solo ordena las opciones al
+ * registrar un estado; un Admin puede cambiarlo y nunca impide usar la alarma en otro estado.
  */
 export const ALARMAS_BASE = [
-  {
-    codigo: 'LOS',
-    nombre: 'Pérdida de señal (LOS)',
-    estado_sugerido: 'Caido',
-    significado: 'El receptor no detecta luz en el puerto: no llega señal por ese filamento. Causas habituales: corte o desconexión de la fibra, conector suelto o muy sucio, falla del transmisor en el extremo remoto o equipo remoto apagado.',
-    procedimiento: [
-      'Confirmar la alarma en el NMS en ambos extremos del enlace y determinar si afecta a un filamento (ida o vuelta) o a ambos.',
-      'Revisar si hay alarmas de energía o de equipo en los sitios de los dos extremos: pueden ser la causa real.',
-      'Consultar la potencia Tx y Rx de los puertos en ambos extremos y compararla con el levantamiento del enlace.',
-      'Si el Tx remoto es normal pero no llega luz, sospechar corte de fibra: solicitar medición con OTDR o inspección en terreno.',
-      'Abrir ticket con el responsable del tramo (zonal o proveedor según el tipo de línea) y registrar el número en el enlace.',
-      'Informar al Supervisor de turno y dejar constancia de lo actuado en la bitácora.',
-    ],
-    escalamiento: 'Supervisor de turno de inmediato. Si el enlace no tiene ruta de respaldo, avisar también a Ingeniería de Transporte.',
-    tiempo_respuesta_min: 15,
-  },
-  {
-    codigo: 'LOF',
-    nombre: 'Pérdida de trama (LOF)',
-    estado_sugerido: 'Caido',
-    significado: 'Llega luz, pero el equipo no logra sincronizar la trama. Suele indicar señal muy degradada, desajuste de configuración entre extremos o falla de una tarjeta o transceptor.',
-    procedimiento: [
-      'Verificar en ambos extremos que la configuración (velocidad, formato, canal) coincide.',
-      'Revisar la potencia Rx: si está en el límite, tratarlo como degradación por atenuación.',
-      'Limpiar o reemplazar el transceptor y los conectores del puerto afectado, si hay acceso al sitio.',
-      'Si persiste, escalar a Ingeniería de Transporte para revisar la tarjeta.',
-    ],
-    escalamiento: 'Supervisor de turno; Ingeniería de Transporte si no se resuelve en el primer análisis.',
-    tiempo_respuesta_min: 30,
-  },
-  {
-    codigo: 'CORTE',
-    nombre: 'Corte de fibra confirmado',
-    estado_sugerido: 'Caido',
-    significado: 'Se confirmó una interrupción física de la fibra (medición con OTDR o reporte de terreno). Causas: obras civiles, vandalismo, accidentes o desastres.',
-    procedimiento: [
-      'Registrar la distancia aproximada al corte (OTDR) y el tramo o zonal al que pertenece.',
-      'Notificar a la zonal responsable de ese tramo y abrir ticket de reparación.',
-      'Coordinar la cuadrilla de reparación y registrar la hora estimada de restablecimiento.',
-      'Informar al Supervisor y a las áreas con servicios afectados.',
-      'Actualizar el enlace con el ticket y las novedades hasta el restablecimiento; al cerrar, registrar la causa raíz.',
-    ],
-    escalamiento: 'Supervisor de turno y responsable de la zonal del tramo afectado.',
-    tiempo_respuesta_min: 15,
-  },
-  {
-    codigo: 'ATEN',
-    nombre: 'Alta atenuación / potencia Rx baja',
-    estado_sugerido: 'Degradado',
-    significado: 'La potencia recibida está por debajo de lo esperado según el levantamiento del enlace. El servicio funciona, pero con poco margen. Causas: conectores sucios, curvaturas, empalmes deteriorados o envejecimiento de la fibra.',
-    procedimiento: [
-      'Comparar la potencia Rx actual con la del levantamiento y estimar cuántos dB se perdieron.',
-      'Revisar si el cambio fue gradual o brusco, y si coincide con alguna intervención en la ruta.',
-      'Solicitar limpieza e inspección de conectores en ambos extremos.',
-      'Si la pérdida supera el margen, abrir ticket para medición de la fibra con OTDR.',
-      'Dejar el enlace en seguimiento: registrar mediciones en cada turno hasta que se corrija.',
-    ],
-    escalamiento: 'Supervisor de turno si la potencia se acerca al umbral de sensibilidad del receptor.',
-    tiempo_respuesta_min: 60,
-  },
-  {
-    codigo: 'SD',
-    nombre: 'Degradación de señal / errores (BER alto)',
-    estado_sugerido: 'Degradado',
-    significado: 'El enlace está activo pero con una tasa de errores superior a la tolerable. Puede originarse en atenuación, conectores defectuosos, dispersión o un transceptor que falla.',
-    procedimiento: [
-      'Revisar los contadores de errores en ambos extremos y confirmar que persisten.',
-      'Verificar potencias Tx y Rx en el filamento afectado.',
-      'Si los errores aparecen en un solo sentido, revisar el transceptor y los conectores de ese filamento.',
-      'Si empeora o hay pérdida de tráfico, escalar y registrar la alarma como Caída.',
-    ],
-    escalamiento: 'Ingeniería de Transporte si los errores persisten tras la revisión básica.',
-    tiempo_respuesta_min: 60,
-  },
-  {
-    codigo: 'ENERGIA',
-    nombre: 'Falla de energía en sitio',
-    estado_sugerido: 'Caido',
-    significado: 'Un sitio o repetidor perdió alimentación eléctrica (corte de red, falla de rectificador o baterías agotadas), lo que apaga los equipos y cae el enlace.',
-    procedimiento: [
-      'Confirmar si hay otras alarmas en el mismo sitio (varios enlaces caídos a la vez sugieren falla de energía).',
-      'Verificar con el responsable del sitio el estado de la red eléctrica y la autonomía de baterías.',
-      'Despachar mantenimiento del sitio o grupo electrógeno si corresponde.',
-      'Registrar la hora de inicio y estimar la autonomía restante para anticipar nuevas caídas.',
-    ],
-    escalamiento: 'Supervisor de turno y mantenimiento del sitio.',
-    tiempo_respuesta_min: 15,
-  },
-  {
-    codigo: 'EQUIPO',
-    nombre: 'Falla de equipo o tarjeta',
-    estado_sugerido: 'Caido',
-    significado: 'Un equipo o una tarjeta de línea presenta una falla de hardware que interrumpe o degrada el enlace.',
-    procedimiento: [
-      'Identificar el equipo y la tarjeta afectados y qué otros enlaces dependen de ellos.',
-      'Intentar el reinicio controlado del puerto o la tarjeta solo si está autorizado en el procedimiento.',
-      'Abrir caso con el proveedor del equipo y coordinar el reemplazo.',
-      'Registrar el número de caso y la hora estimada de reposición.',
-    ],
-    escalamiento: 'Ingeniería de Transporte y proveedor del equipo.',
-    tiempo_respuesta_min: 30,
-  },
-  {
-    codigo: 'TERCEROS',
-    nombre: 'Intervención de terceros / obra civil',
-    estado_sugerido: 'Caido',
-    significado: 'Una obra o trabajo ajeno a la operación está afectando o amenaza la fibra o el sitio (excavaciones, trabajos en postes, maniobras de otro operador).',
-    procedimiento: [
-      'Identificar el responsable de la obra y el punto exacto.',
-      'Solicitar la detención de los trabajos o la coordinación con el área de canalización.',
-      'Despachar a terreno para constatar el daño y fotografiarlo.',
-      'Abrir ticket de reparación y registrar los datos del tercero para el posterior reclamo.',
-    ],
-    escalamiento: 'Supervisor de turno y área legal/seguros si hay daño a la infraestructura.',
-    tiempo_respuesta_min: 15,
-  },
-  {
-    codigo: 'MANT',
-    nombre: 'Mantenimiento programado',
-    estado_sugerido: 'Mantenimiento',
-    significado: 'Ventana de trabajo planificada y autorizada sobre el enlace. Puede haber interrupción o degradación del servicio durante la ventana.',
-    procedimiento: [
-      'Verificar que existe el ticket o cambio autorizado y que la ventana coincide con la hora actual.',
-      'Registrar el número del cambio en el enlace y el horario previsto de término.',
-      'Al finalizar la ventana, confirmar que el enlace volvió a OK y cerrar el estado de mantenimiento.',
-      'Si la ventana se excede o hay incidencias, escalar al Supervisor.',
-    ],
-    escalamiento: 'Responsable del cambio y Supervisor de turno si la ventana se excede.',
-    tiempo_respuesta_min: null,
-  },
+  { codigo: 'BEFFEC_EXC', nombre: 'BCH / FEC Bit Error Rate Exceeds Threshold', estado_sugerido: 'Degradado',
+    significado: 'La tasa de error de bits (BER) corregida antes del FEC supera el umbral crítico. Indica degradación severa en la señal óptica.' },
+  { codigo: 'SPAN_LOSS_EXCEED_EOL', nombre: 'Span Loss Exceeds End of Life', estado_sugerido: 'Degradado',
+    significado: 'La atenuación o pérdida en el tramo de fibra superó el límite de fin de vida útil (EOL) planificado para el enlace.' },
+  { codigo: 'SPAN_LOSS_EXCEED_BOL', nombre: 'Span Loss Exceeds Beginning of Life', estado_sugerido: 'Degradado',
+    significado: 'La pérdida del tramo supera la tolerancia inicial (BOL) proyectada, indicando degradación temprana de la fibra.' },
+  { codigo: 'R_LOS', nombre: 'Receive Loss of Signal', estado_sugerido: 'Caido',
+    significado: 'Pérdida total de la señal óptica recibida en un puerto o interfaz.' },
+  { codigo: 'R_LOF', nombre: 'Receive Loss of Frame', estado_sugerido: 'Caido',
+    significado: 'Pérdida de la trama en la recepción. La señal óptica llega, pero no se puede sincronizar ni delimitar el formato del frame.' },
+  { codigo: 'HARD_BAD', nombre: 'Hardware Bad / Hardware Failure', estado_sugerido: 'Caido',
+    significado: 'Fallo o avería física en un módulo, tarjeta o transceptor (SFP/XFP/CFP).' },
+  { codigo: 'IN_PWR_HIGH', nombre: 'Input Power Too High', estado_sugerido: 'Degradado',
+    significado: 'La potencia de entrada óptica en la interfaz receptora supera el umbral máximo de saturación.' },
+  { codigo: 'IN_PWR_LOW', nombre: 'Input Power Too Low', estado_sugerido: 'Degradado',
+    significado: 'La potencia óptica recibida está por debajo de la sensibilidad mínima aceptable de la interfaz.' },
+  { codigo: 'MUT_LOS', nombre: 'Multiplexer Unit Loss of Signal', estado_sugerido: 'Caido',
+    significado: 'Pérdida de señal a la entrada del multiplexor u ordenador óptico.' },
+  { codigo: 'OSC_LOS', nombre: 'Optical Supervisory Channel Loss of Signal', estado_sugerido: 'Degradado',
+    significado: 'Pérdida de la señal del canal de supervisión óptica (OSC), lo que impide la gestión e intercambio de información entre sitios.' },
+  { codigo: 'TEMP_ALAM', nombre: 'Temperature Alarm', estado_sugerido: 'Degradado',
+    significado: 'La temperatura de una tarjeta o componente de chasis excede el umbral de operación seguro.' },
+  { codigo: 'OTU_LOF', nombre: 'OTU Loss of Frame', estado_sugerido: 'Caido',
+    significado: 'Pérdida del encuadre en la capa de unidad de transporte óptico (OTU).' },
+  { codigo: 'ODU_AIS', nombre: 'ODU Alarm Indication Signal', estado_sugerido: 'Caido',
+    significado: 'Señal de indicación de alarma en la capa ODU (Optical Data Unit), generada aguas arriba debido a un fallo severo previo.' },
+  { codigo: 'FAN_FAIL', nombre: 'Fan Unit Failure', estado_sugerido: 'Degradado',
+    significado: 'Fallo mecánico o eléctrico en la unidad de ventilación del chasis.' },
+
+  // Mantenimiento: informa a todo el NOC que se está trabajando (o se va a trabajar) en el enlace. Un Admin puede agregar más tipos
+  // (p. ej. cambio de tarjeta, limpieza de conectores) desde Administración → Alarmas, con estado sugerido "Mantenimiento".
+  { codigo: 'MANT_PROG', nombre: 'Mantenimiento programado', estado_sugerido: 'Mantenimiento',
+    significado: 'Trabajo planificado y coordinado, con ventana definida, en el enlace o en un equipo asociado.' },
+  { codigo: 'MANT_CORR', nombre: 'Mantenimiento correctivo', estado_sugerido: 'Mantenimiento',
+    significado: 'Intervención no planificada para reparar o prevenir una falla; puede afectar el servicio.' },
 ];
 
-/** Upsert por código. Idempotente: nunca pisa lo que un Admin haya editado (todo va en $setOnInsert). */
-export async function cargarAlarmasBase({ modelos = { AlarmType }, alarmas = ALARMAS_BASE } = {}) {
-  let creados = 0;
-  for (const a of alarmas) {
-    const r = await modelos.AlarmType.updateOne({ codigo: a.codigo }, { $setOnInsert: { ...a, activo: true } }, { upsert: true });
-    creados += r.upsertedCount ?? 0;
+/** Tipificaciones genéricas de la primera versión del sistema: este catálogo las reemplaza (se DESACTIVAN, no se borran). */
+export const ALARMAS_GENERICAS = ['LOS', 'LOF', 'CORTE', 'ATEN', 'SD', 'ENERGIA', 'EQUIPO', 'TERCEROS', 'MANT'];
+
+/** Códigos propios que ya usaba la operación para una alarma del catálogo: se renombran conservando todo su contenido. */
+export const CODIGOS_RENOMBRADOS = { SPAN_LOSS: 'SPAN_LOSS_EXCEED_EOL' };
+
+const duplicado = (err) => err?.code === 11000;
+
+/**
+ * Deja la tipificación de alarmas según el catálogo DWDM. Idempotente y respetuoso con lo que un Admin ya haya editado:
+ *  1. renombra los códigos propios equivalentes (p. ej. SPAN_LOSS → SPAN_LOSS_EXCEED_EOL) SIN tocar su procedimiento, escalamiento ni documentos;
+ *  2. crea las alarmas que falten (las que ya existen NO se modifican);
+ *  3. desactiva las genéricas anteriores (salvo con `retirarGenericas: false`), conservando su historial.
+ * Devuelve el detalle para mostrarlo: { creados, total, renombrados, retiradas, conflictos }.
+ */
+export async function cargarAlarmasBase({ modelos = { AlarmType }, alarmas = ALARMAS_BASE, retirarGenericas = true } = {}) {
+  const { AlarmType: Modelo } = modelos;
+  const catalogo = new Map(alarmas.map((a) => [a.codigo, a]));
+  const resultado = { creados: 0, total: alarmas.length, renombrados: [], retiradas: 0, conflictos: [] };
+
+  for (const [viejo, nuevo] of Object.entries(CODIGOS_RENOMBRADOS)) {
+    const actual = await Modelo.findOne({ codigo: viejo });
+    if (!actual) continue;
+    if (await Modelo.findOne({ codigo: nuevo })) {
+      resultado.conflictos.push(`${viejo}: no se renombró porque ya existe ${nuevo}; revise cuál conservar desde Administración → Alarmas`);
+      continue;
+    }
+    // si el nombre era solo el código repetido (p. ej. "SPAN_LOSS_EXCEED_EOL"), se pasa al nombre del catálogo; si no, se respeta
+    const sinNombreReal = [viejo, nuevo].includes(String(actual.nombre).toUpperCase());
+    const cambios = { codigo: nuevo, ...(sinNombreReal && catalogo.has(nuevo) && { nombre: catalogo.get(nuevo).nombre }) };
+    try {
+      await Modelo.updateOne({ _id: actual._id }, { $set: cambios });
+      resultado.renombrados.push({ de: viejo, a: nuevo });
+    } catch (err) {
+      if (!duplicado(err)) throw err;
+      resultado.conflictos.push(`${viejo}: no se pudo renombrar a ${nuevo} (el nombre «${cambios.nombre}» ya está en uso)`);
+    }
   }
-  return { creados, total: alarmas.length };
+
+  for (const a of alarmas) {
+    try {
+      const r = await Modelo.updateOne({ codigo: a.codigo }, { $setOnInsert: { ...a, activo: true } }, { upsert: true });
+      resultado.creados += r.upsertedCount ?? 0;
+    } catch (err) {
+      if (!duplicado(err)) throw err;
+      resultado.conflictos.push(`${a.codigo}: no se creó porque ya existe otra tipificación con el nombre «${a.nombre}»`);
+    }
+  }
+
+  if (retirarGenericas) {
+    const r = await Modelo.updateMany({ codigo: { $in: ALARMAS_GENERICAS }, activo: true }, { $set: { activo: false } });
+    resultado.retiradas = r.modifiedCount ?? 0;
+  }
+  return resultado;
 }

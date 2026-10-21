@@ -7,10 +7,12 @@ import { filamentosIniciales } from '../utils/filamentos.js';
 import { ordenarTramos, redondearKm, validarTramos } from '../utils/tramos.js';
 import { NodeDoc } from '../models/Node.js';
 import { IncidenceLog } from '../models/IncidenceLog.js';
+import { Service } from '../models/Service.js';
 import { sincronizarIncidencia } from '../services/incidence.service.js';
 import { POPULATE_NODOS, cambiarEstado, pushTimeline } from '../services/link.service.js';
 import { anioMesEnZona, metricasMensuales, rangoMes } from '../services/metrics.service.js';
 import { emitToNoc } from '../sockets/index.js';
+import { emitirEnlace, usuarioResumen } from '../sockets/linkEvents.js';
 import { AppError, asyncHandler } from '../utils/errors.js';
 import { escapeRegex, esObjectId } from '../utils/ids.js';
 
@@ -46,21 +48,6 @@ async function resolverTipificacion(ref) {
   return tipo;
 }
 
-const usuarioResumen = (u) => ({ id: u.id, nombre: u.nombre, rol: u.rol });
-
-/**
- * Contrato del evento hacia el frontend. Se omite el timeline completo (pesado) y se envía solo
- * el último evento; el detalle se obtiene con GET /api/links/:id.
- */
-function emitirEnlace(evento, linkDoc, { usuario, cambio } = {}) {
-  const { timeline = [], ...resto } = linkDoc.toJSON();
-  emitToNoc(evento, {
-    link: { ...resto, ultimo_evento: timeline.at(-1) ?? null },
-    cambio: cambio ?? null, // { de, a } | { campos: [...] }
-    por: usuario ? usuarioResumen(usuario) : null,
-    ts: new Date().toISOString(),
-  });
-}
 
 const recargar = (id) => Link.findById(id).populate(POPULATE_NODOS);
 
@@ -244,6 +231,9 @@ export const eliminar = asyncHandler(async (req, res) => {
   }
   if (tieneHistorial) await IncidenceLog.deleteMany({ enlace: link._id });
   await link.deleteOne();
+  // los servicios que pasaban por este enlace dejan de referirlo (si no, quedarían apuntando a un enlace que ya no existe)
+  const { modifiedCount } = await Service.updateMany({ enlaces: link._id }, { $pull: { enlaces: link._id } });
+  if (modifiedCount) emitToNoc('services:changed', { accion: 'enlace-eliminado', por: usuarioResumen(req.user), ts: new Date().toISOString() });
 
   emitToNoc('link:deleted', { id: link.id, id_enlace: link.id_enlace, por: usuarioResumen(req.user), ts: new Date().toISOString() });
   res.json({ ok: true, data: { id: link.id, id_enlace: link.id_enlace } });
