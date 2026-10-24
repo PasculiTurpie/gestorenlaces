@@ -31,6 +31,7 @@ export function iniciarTiempoReal(token) {
     'zonal:changed': () => T().cargar({ silencioso: true }),
     'alarmtype:changed': () => T().cargar({ silencioso: true }), // cambia el significado/procedimiento que viaja con cada alarma
     'maintenance:changed': (p) => { T().cargarMantenimientos(); registrar('maintenance:changed', p); }, // todos se enteran en el momento
+    'item:changed': (p) => { T().cargarItems(); registrar('item:changed', p); }, // un ítem de atención nuevo o resuelto lo ven todos al instante
     'services:changed': (p) => { T().cargarServicios(); registrar('services:changed', p); }, // cambian los servicios de los enlaces
     'shift:opened': (p) => registrar('shift:opened', p),
     'shift:closed': (p) => registrar('shift:closed', p),

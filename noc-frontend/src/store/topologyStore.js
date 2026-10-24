@@ -52,6 +52,7 @@ const estadoInicial = () => ({
   tipos: [], // catálogo de tipos de línea
   zonales: [], // catálogo de zonales (reparto por km de cada enlace)
   alarmas: [], // catálogo de tipificación de alarmas (significado y procedimiento)
+  items: [], // ítems de atención ABIERTOS (compartidos por todos los operadores)
   serviciosPorEnlace: {}, // { enlaceId: n } cuántos servicios pasan por cada enlace (el detalle se pide al abrir el enlace)
   mantenimientos: [], // activos: Programado y En curso (la lista completa, con historial, se pide en su pantalla)
   expandidos: {}, // { enlaceId: true } enlaces con los dos filamentos desplegados
@@ -77,7 +78,7 @@ export const useTopology = create((set, get) => ({
     if (!silencioso) set({ cargando: true, error: null });
     try {
       // los mantenimientos son informativos: si fallan, la consola sigue funcionando (se reintenta con el próximo evento)
-      const [n, e, t, z, a, m, sv] = await Promise.all([api.nodos(), api.enlaces(), api.tipos(), api.zonales(), api.alarmas(), api.mantenimientos().catch(() => null), api.serviciosResumen().catch(() => null)]);
+      const [n, e, t, z, a, m, sv, it] = await Promise.all([api.nodos(), api.enlaces(), api.tipos(), api.zonales(), api.alarmas(), api.mantenimientos().catch(() => null), api.serviciosResumen().catch(() => null), api.items().catch(() => null)]);
       set({
         nodos: indexar(n.data.map(normalizarNodo), 'id_nodo'),
         enlaces: indexar(e.data.map(normalizarEnlace), '_id'),
@@ -86,6 +87,7 @@ export const useTopology = create((set, get) => ({
         alarmas: a.data,
         ...(m && { mantenimientos: m.data }),
         ...(sv && { serviciosPorEnlace: sv.data.por_enlace }),
+        ...(it && { items: it.data }),
         cargando: false,
         error: null,
       });
@@ -93,6 +95,10 @@ export const useTopology = create((set, get) => ({
       if (silencioso) get().pushToast({ nivel: 'warn', texto: `No se pudo resincronizar: ${err.message}` });
       else set({ cargando: false, error: err.message });
     }
+  },
+
+  async cargarItems() {
+    try { set({ items: (await api.items()).data }); } catch { /* informativo: se reintenta con el próximo evento */ }
   },
 
   async cargarServicios() {

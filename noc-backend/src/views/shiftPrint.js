@@ -17,7 +17,7 @@ function formatearDuracion(minutos) {
   return h ? `${h} h ${m} min` : `${total} min`;
 }
 
-export function renderShiftHtml({ acta, incidencias, tz, ahora = new Date() }) {
+export function renderShiftHtml({ acta, incidencias, itemsAtencion = [], tz, ahora = new Date() }) {
   const fmt = (d) =>
     d
       ? new Intl.DateTimeFormat('es-CL', { dateStyle: 'short', timeStyle: 'short', timeZone: tz }).format(new Date(d))
@@ -29,6 +29,16 @@ export function renderShiftHtml({ acta, incidencias, tz, ahora = new Date() }) {
   const fin = acta.fecha_fin ?? ahora;
   const duracionMin = (new Date(fin) - new Date(acta.fecha_inicio)) / 60_000;
   const borrador = !acta.cerrado;
+
+  // Ítems de atención (transversales): ingresados durante este turno y abiertos al cierre (o ahora, si el turno sigue abierto)
+  const t0 = new Date(acta.fecha_inicio).getTime();
+  const t1 = new Date(fin).getTime();
+  const ingresados = itemsAtencion.filter((i) => { const t = new Date(i.createdAt).getTime(); return t >= t0 && t <= t1; });
+  const abiertosAlCierre = itemsAtencion.filter((i) => new Date(i.createdAt).getTime() <= t1 && (i.estado === 'Abierto' || new Date(i.resuelto_en).getTime() > t1));
+  const filasItems = (lista) => (lista.length
+    ? lista.map((i) => `<tr><td><b>${esc(i.titulo)}</b></td><td>${esc(i.ticket)}</td><td>${esc(i.descripcion)}</td><td>${esc(i.creado_por_nombre)}</td><td>${esc(fmt(i.createdAt))}</td><td>${i.estado === 'Resuelto' ? `Resuelto por ${esc(i.resuelto_por_nombre)} (${esc(fmt(i.resuelto_en))})` : 'Abierto'}</td></tr>`).join('')
+    : '<tr><td colspan="6" class="muted">Ninguno.</td></tr>');
+  const tablaItems = (lista) => `<table><thead><tr><th>Ítem</th><th>Ticket</th><th>Descripción</th><th>Ingresó</th><th>Desde</th><th>Estado</th></tr></thead><tbody>${filasItems(lista)}</tbody></table>`;
 
   const filasChecklist = items.length
     ? items
@@ -123,6 +133,12 @@ ${borrador ? '<div class="borrador">BORRADOR</div>' : ''}
   <thead><tr><th>Enlace</th><th>Severidad</th><th>Inicio</th><th>Fin</th><th>Duración</th><th>Ticket</th><th>Causa raíz</th></tr></thead>
   <tbody>${filasIncidencias}</tbody>
 </table>
+
+<h2>Ítems de atención ingresados durante el turno</h2>
+${tablaItems(ingresados)}
+
+<h2>Ítems de atención abiertos ${borrador ? 'a esta hora' : 'al cierre del turno'}</h2>
+${tablaItems(abiertosAlCierre)}
 
 <h2>Bitácora general</h2>
 <div class="bitacora">${esc(acta.bitacora_general) || '<span class="muted">Sin observaciones.</span>'}</div>

@@ -22,6 +22,19 @@ export const env = {
   // Documentos adjuntos (procedimientos .docx/.pdf/.xlsx). En contenedores, montar un volumen persistente aquí.
   uploadsDir: path.resolve(process.env.UPLOADS_DIR ?? 'uploads'),
   maxUploadMb: Number(process.env.MAX_UPLOAD_MB ?? 15),
+  // Integración (solo lectura) con iMaster NCE. Credenciales SOLO por variables de entorno: nunca en la base de datos ni en la API.
+  nce: {
+    habilitado: process.env.NCE_ENABLED === 'true',
+    baseUrl: (process.env.NCE_BASE_URL ?? '').trim(),
+    usuario: process.env.NCE_USERNAME ?? '',
+    clave: process.env.NCE_PASSWORD ?? '',
+    tlsVerify: process.env.NCE_TLS_VERIFY !== 'false', // false solo para pruebas
+    caFile: process.env.NCE_CA_FILE ?? '', // certificado/cadena de la CA de NCE (PEM), si no es una autoridad pública
+    timeoutMs: Number(process.env.NCE_TIMEOUT_MS ?? 15000),
+    pollSeg: Math.max(10, Number(process.env.NCE_POLL_SECONDS ?? 60)),
+    perfil: path.resolve(process.env.NCE_PROFILE ?? 'config/nce.perfil.ejemplo.json'),
+    correspondencias: path.resolve(process.env.NCE_MAPPINGS ?? 'config/nce.correspondencia.ejemplo.json'),
+  },
 };
 
 if (env.nodeEnv === 'production' && env.jwtSecret.length < 32) {

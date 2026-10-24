@@ -1,0 +1,7 @@
+[
+  { "ne": "VLDV-DWDM-01", "puerto": "Slot 3/Port 1", "enlace": "ENL-VLDV-LANC-01", "sentido": "ida" },
+  { "ne": "LANC-DWDM-01", "puerto": "Slot 2/Port 1", "enlace": "ENL-LANC-PNGP-01", "sentido": "ida" },
+  { "ne": "LANC-DWDM-01", "puerto": "Slot 2/Port 2", "enlace": "ENL-LANC-PNGP-01", "sentido": "vuelta" },
+  { "ne": "CHIL1-DWDM-01", "puerto": "Slot 1/Port 1", "enlace": "ENL-CHIL1-BULN-01", "sentido": "ida" },
+  { "ne": "RANC-DWDM-01", "puerto": "Slot 5/Port 1", "enlace": "ENL-ALJA-RANC-01", "sentido": "vuelta" }
+]

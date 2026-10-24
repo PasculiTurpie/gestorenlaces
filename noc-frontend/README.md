@@ -5,7 +5,7 @@ React 18 · Vite 5 · Tailwind 3 · @xyflow/react (React Flow 12) · Zustand · 
 ```bash
 npm install
 npm run dev        # http://localhost:5173  (el backend debe estar en :4000)
-npm test           # lógica pura y store (87 pruebas, sin navegador)
+npm test           # lógica pura y store (93 pruebas, sin navegador)
 npm run build      # genera dist/
 ```
 
@@ -30,6 +30,11 @@ así que no hay CORS ni configuración extra. Para producción sirviendo el fron
 - **Horario de los turnos** (Mañana 08:00–15:30, Tarde 15:30–23:00, Noche 23:00–08:00; lo define el backend): al abrir se propone el turno que corresponde por la hora
   (no el asignado al usuario) y se ve el horario en el selector y en el encabezado. Si el último turno cerrado no es el que corresponde (p. ej. se entra a la mañana
   y el último acta es de la tarde), el traspaso muestra un aviso: puede que el turno intermedio no se haya registrado.
+- **Ítems de atención** (en la pantalla Turno, antes y después de abrir el turno): lo que hay que atender además de los enlaces (corte de cable secundario, corte de energía…), con **ticket obligatorio**, descripción y
+  quién lo ingresó (la persona con sesión). Son de todo el NOC: los ven y atienden todos los operadores del turno, se actualizan en vivo y pasan al turno siguiente hasta que alguien los resuelve. Seguimiento con hilo de notas,
+  resolver (indicando cómo), pestaña de resueltos y reabrir. Aparecen en el acta imprimible.
+- **Integración con iMaster NCE** (Administración → Integración NCE, Supervisor y Admin): estado de la conexión, **prueba paso a paso** (configuración, autenticación, consulta, interpretación y correspondencia), y las alarmas leídas de NCE
+  ya relacionadas con el enlace y filamento de la app (con «Abrir enlace»). Es solo lectura; la conexión se configura en el servidor. Ver el capítulo 11 del manual.
 - **Servicios por enlace:** al consultar un enlace se ve qué servicios pasan por él («Servicios afectados» si tiene una falla o está en mantenimiento), y en las alarmas activas de la barra lateral
   cuántos servicios afecta cada una. Un Supervisor o Admin los administra en Administración → Servicios: listado con búsqueda, alta/edición manual y **Importar Excel / texto** (asistente en 4 pasos: archivo,
   columnas —se reconocen solas por su encabezado—, vista previa sin guardar y resultado). Admite `.xlsx`, `.txt` y `.csv`; el enlace puede venir por su código, por los nodos que une o como recorrido.

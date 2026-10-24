@@ -12,6 +12,7 @@ import { Aviso, Boton, Campo, Dialogo, entrada } from '../admin/ui.jsx';
 import ChecklistTabla from './ChecklistTabla.jsx';
 import { avisoContinuidad, etiquetaTurno, rangoTurno } from '../../lib/horarios.js';
 import MantenimientosTurno from '../mantenimientos/MantenimientosTurno.jsx';
+import ItemsAtencion from './ItemsAtencion.jsx';
 import TurnoAnterior from './TurnoAnterior.jsx';
 import VistaPreviaActa from './VistaPreviaActa.jsx';
 
@@ -174,6 +175,7 @@ export default function TurnoActual() {
   if (!acta) {
     return (
       <div className="mx-auto max-w-3xl space-y-5">
+        <ItemsAtencion />
         <MantenimientosTurno />
         {anterior ? (
           <>
@@ -208,6 +210,7 @@ export default function TurnoActual() {
       </div>
 
       {/* Desplegado mientras el operador no empieza el checklist; plegado si ya avanzó (p. ej. al recargar la página) */}
+      {!acta.cerrado && <ItemsAtencion className="mb-4" />}
       {!acta.cerrado && <MantenimientosTurno className="mb-4" />}
       {anterior && !acta.cerrado && <div className="mb-4"><TurnoAnterior acta={anterior} aviso={avisoContinuidad(horarios, acta.tipo_turno, anterior)} inicialAbierto={!acta.items.some(itemResuelto)} /></div>}
 

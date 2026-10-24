@@ -73,6 +73,49 @@ Incluye dos tipificaciones de **mantenimiento** (`MANT_PROG` programado y `MANT_
 (p. ej. cambio de tarjeta, limpieza de conectores) con ese mismo estado sugerido. Para que existan en una base ya cargada, ejecute `npm run seed:alarmas` (no modifica lo que ya existe).
 Desde ahora **pasar un enlace a Mantenimiento también exige elegir la tipificación**, igual que Caído y Degradado.
 
+## Ítems de atención del turno
+
+Lo que hay que atender **además de los enlaces** (corte de cable secundario, corte de energía, falla de climatización…). Son **transversales**: no pertenecen al acta de un operador sino a todo el NOC, así que
+los ven y atienden todos los operadores que estén de turno y **siguen abiertos de un turno al siguiente** hasta que alguien los resuelve. Cada ítem lleva título, **ticket** (obligatorio), descripción y **quién lo ingresó**:
+el nombre y el id salen de la sesión (el cliente no puede enviarlos ni cambiarlos después) junto con la fecha y el turno en que se ingresó.
+
+| Ruta | Rol mínimo | Descripción |
+|---|---|---|
+| `GET /api/shift-items?estado=Abierto\|Resuelto\|todos&q=` | auth | Por defecto, los abiertos (más nuevos primero); los resueltos, por fecha de resolución |
+| `POST /api/shift-items` | auth | Ingresa uno: `{ titulo, ticket, descripcion }` (cualquier otro campo se rechaza) |
+| `PATCH /api/shift-items/:id` | auth | Corrige título, ticket o descripción mientras está abierto (queda en su historial) |
+| `POST /api/shift-items/:id/seguimiento` | auth | Agrega una nota con el nombre de quien la escribe |
+| `POST /api/shift-items/:id/resolver` | auth | Exige `resolucion`; guarda quién lo resolvió y cuándo (atómico: no se resuelve dos veces) |
+| `POST /api/shift-items/:id/reabrir` | auth | Lo vuelve a abrir |
+
+Avisa por Socket.io (`item:changed`). El acta imprimible (`GET /api/shifts/:id/print`) incluye los ítems ingresados durante el turno y los que seguían abiertos al cierre. Cerrar un turno **no** exige resolverlos.
+
+## Conexión con iMaster NCE (solo lectura)
+
+El servidor puede leer las alarmas activas de iMaster NCE, interpretarlas y relacionarlas con los enlaces. **Solo consulta**: no escribe en NCE ni cambia estados de enlaces por sí solo.
+Está en `src/integraciones/nce/` y se ve en Administración → Integración NCE (Supervisor y Admin). Manual completo: capítulo 11 del manual de uso.
+
+> **Importante:** no se dispone de la guía de la API de NCE-T de su versión. El perfil incluido (`config/nce.perfil.ejemplo.json`) es una **plantilla no verificada** que coincide con el simulador.
+> Ajústelo a la guía real (rutas, autenticación, campos) y póngale `"verificado": true` cuando lo haya contrastado. No hace falta tocar el código.
+
+- **Variables (`.env`)**: `NCE_ENABLED`, `NCE_BASE_URL`, `NCE_USERNAME`, `NCE_PASSWORD`, `NCE_TLS_VERIFY` (déjelo en `true`), `NCE_CA_FILE` (CA propia en PEM), `NCE_POLL_SECONDS` (mín. 10), `NCE_TIMEOUT_MS`, `NCE_PROFILE`, `NCE_MAPPINGS`.
+  Las credenciales solo viven en el entorno: no se guardan en la base ni salen por la API.
+- **Perfil** (`autenticacion`, `alarmas`, `campos`, `severidad`): describe cómo habla la API. Autenticación por token (JSON o formulario), básica o ninguna; paginación opcional. Si es inválido, el error indica el campo.
+- **Correspondencias** (`config/nce.correspondencia.ejemplo.json`): `{ ne, puerto?, enlace, sentido? }`. Relacionan equipo/puerto de NCE con enlace y filamento; gana la regla con puerto.
+- **Cliente**: tiempo máximo, tope de 10 MB, TLS verificado (error claro si el certificado no es de confianza), renovación del token (antes de vencer y ante 401), reintentos con espera creciente ante errores de red y 5xx, y **sin reintentos con credenciales rechazadas** (para no bloquear la cuenta).
+- **Sincronización**: cada `NCE_POLL_SECONDS` (se espacia hasta 5× tras fallos); conserva la última lectura buena. `socket`: `nce:sincronizado`.
+
+| Ruta | Rol mínimo | Descripción |
+|---|---|---|
+| `GET /api/integraciones/nce/alarmas` | auth | Última lectura, ya relacionada con los enlaces |
+| `GET /api/integraciones/nce/estado` | Supervisor | Estado (sin contraseña), perfil, última lectura y último error |
+| `POST /api/integraciones/nce/probar` | Supervisor | Prueba paso a paso (configuración → autenticación → consulta → interpretación → correspondencia); no guarda nada |
+| `POST /api/integraciones/nce/sincronizar` | Supervisor | Lee las alarmas ahora |
+| `POST /api/integraciones/nce/recargar` | Admin | Relee perfil y correspondencias sin reiniciar |
+
+**Probar sin un NCE real:** `npm run nce:simulador` (puerto 4600, usuario `integracion`, clave `cambiar-esta-clave`) y, en el `.env`:
+`NCE_ENABLED=true`, `NCE_BASE_URL=http://127.0.0.1:4600`, `NCE_USERNAME=integracion`, `NCE_PASSWORD=cambiar-esta-clave`.
+
 ## Servicios que pasan por cada enlace
 
 Cada servicio (una señal de TV, un circuito de datos…) tiene nombre, cliente, tipo, capacidad, código y observación, y **los enlaces por los que pasa** (en orden). Sirve para saber

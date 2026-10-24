@@ -1,4 +1,4 @@
-import { BellRing, Cable, Layers, MapPin, Network, Palette, Server, Users } from 'lucide-react';
+import { BellRing, Cable, Layers, MapPin, Network, Palette, PlugZap, Server, Users } from 'lucide-react';
 import { NavLink, Navigate, Outlet, useLocation } from 'react-router-dom';
 import { cn } from '../../lib/format.js';
 import { useAuth } from '../../store/authStore.js';
@@ -12,6 +12,7 @@ const SECCIONES = [
   { ruta: 'zonales', etiqueta: 'Zonales', icono: MapPin, roles: ['Admin'] },
   { ruta: 'alarmas', etiqueta: 'Alarmas', icono: BellRing, roles: ['Admin'] },
   { ruta: 'usuarios', etiqueta: 'Usuarios', icono: Users, roles: ['Admin'] },
+  { ruta: 'nce', etiqueta: 'Integración NCE', icono: PlugZap, roles: ['Supervisor', 'Admin'] },
   { ruta: 'sistema', etiqueta: 'Sistema', icono: Server, roles: ['Admin'] },
 ];
 

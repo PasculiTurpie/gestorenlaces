@@ -15,7 +15,8 @@
     "seed:tipos": "node scripts/seed-tipos.js",
     "seed:alarmas": "node scripts/seed-alarmas.js",
     "seed:enlaces": "node scripts/seed-enlaces.js",
-    "migrar:fecha-turno": "node scripts/migrar-fecha-turno.js"
+    "migrar:fecha-turno": "node scripts/migrar-fecha-turno.js",
+    "nce:simulador": "node scripts/nce-simulador.js"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",

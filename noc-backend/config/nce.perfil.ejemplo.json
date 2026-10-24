@@ -1,0 +1,34 @@
+{
+  "nombre": "Plantilla de ejemplo (NO verificada contra un NCE real)",
+  "verificado": false,
+  "notas": "Esta plantilla coincide con el simulador incluido (npm run nce:simulador). La API real de su versión de iMaster NCE-T puede diferir: ajuste rutas, autenticación y campos según la guía de la interfaz y ponga «verificado» en true cuando lo haya contrastado.",
+  "autenticacion": {
+    "tipo": "token",
+    "metodo": "POST",
+    "ruta": "/api/auth/token",
+    "formato": "json",
+    "cuerpo": { "usuario": "{usuario}", "clave": "{clave}" },
+    "token_en_respuesta": "access_token",
+    "expira_en_respuesta": "expires_in",
+    "cabecera": "X-ACCESS-TOKEN",
+    "prefijo": ""
+  },
+  "alarmas": {
+    "metodo": "GET",
+    "ruta": "/api/alarmas/activas",
+    "consulta": {},
+    "lista_en_respuesta": "data.alarms",
+    "paginacion": { "parametro_inicio": "inicio", "parametro_limite": "limite", "tamano": 200, "total_en_respuesta": "data.total" }
+  },
+  "campos": {
+    "id": "alarmId",
+    "nombre": "alarmName",
+    "severidad": "severity",
+    "equipo": "neName",
+    "ubicacion": "location",
+    "inicio": "occurTime",
+    "texto": "additionalInfo"
+  },
+  "formato_fecha": "auto",
+  "severidad": { "Critical": "Caido", "Major": "Caido", "Minor": "Degradado", "Warning": "Degradado", "Indeterminate": "Ignorar" }
+}

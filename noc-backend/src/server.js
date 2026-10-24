@@ -3,6 +3,7 @@ import mongoose from 'mongoose';
 import { createApp } from './app.js';
 import { connectDB } from './config/db.js';
 import { env } from './config/env.js';
+import { iniciarNCE } from './integraciones/nce/index.js';
 import { verificarCarpetaDocumentos } from './services/sistema.service.js';
 import { rellenarFechaTurno } from './services/turnos.service.js';
 import { getIO, initSocket } from './sockets/index.js';
@@ -21,6 +22,8 @@ await verificarCarpetaDocumentos();
 await rellenarFechaTurno()
   .then((n) => n && console.log(`[turnos] fecha de turno asignada a ${n} acta(s) anteriores`))
   .catch((err) => console.error('[turnos] no se pudo asignar la fecha de turno a las actas anteriores:', err.message));
+
+iniciarNCE(); // integración de solo lectura con iMaster NCE (si está activada); no impide arrancar si falla
 
 server.listen(env.port, () => {
   console.log(`[http] NOC API escuchando en :${env.port} (${env.nodeEnv})`);

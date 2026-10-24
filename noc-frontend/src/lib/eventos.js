@@ -42,6 +42,10 @@ export function describirEvento(tipo, p, miId) {
       const enlaces = `${p.enlaces} enlace${p.enlaces === 1 ? '' : 's'}`;
       return { texto: `${quien(p.por, miId)} ${verbo} el mantenimiento «${p.titulo}» (${enlaces})`, nivel: p.accion === 'iniciado' ? 'warn' : 'info', notificar: p.por?.id !== miId };
     }
+    case 'item:changed': {
+      const frase = { creado: 'ingresó el', editado: 'editó el', seguimiento: 'agregó seguimiento al', resuelto: 'resolvió el', reabierto: 'reabrió el' }[p.accion] ?? 'actualizó el';
+      return { texto: `${quien(p.por, miId)} ${frase} ítem «${p.titulo}» (ticket ${p.ticket})`, nivel: p.accion === 'creado' || p.accion === 'reabierto' ? 'warn' : 'info', notificar: p.por?.id !== miId };
+    }
     case 'services:changed': {
       const base = { creado: 'creó un servicio', editado: 'editó un servicio', eliminado: 'eliminó un servicio', importado: `importó servicios (${p.creados ?? 0} nuevos, ${p.actualizados ?? 0} actualizados)`, 'enlace-eliminado': 'actualizó los servicios por un enlace eliminado' }[p.accion] ?? 'actualizó los servicios';
       return { texto: `${quien(p.por, miId)} ${base}`, nivel: 'info', notificar: false };

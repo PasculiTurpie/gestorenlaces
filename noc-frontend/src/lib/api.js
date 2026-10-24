@@ -160,6 +160,24 @@ export const api = {
     return request('/api/services/import', { method: 'POST', form });
   },
 
+  // Integración (solo lectura) con iMaster NCE
+  nceEstado: () => request('/api/integraciones/nce/estado'),
+  nceAlarmas: () => request('/api/integraciones/nce/alarmas'),
+  nceProbar: () => request('/api/integraciones/nce/probar', { method: 'POST' }),
+  nceSincronizar: () => request('/api/integraciones/nce/sincronizar', { method: 'POST' }),
+  nceRecargar: () => request('/api/integraciones/nce/recargar', { method: 'POST' }),
+
+  // Ítems de atención: lo que hay que atender además de los enlaces (corte de cable secundario, corte de energía…), compartido por todo el NOC
+  items: (q = {}) => {
+    const qs = new URLSearchParams(Object.entries(q).filter(([, v]) => v !== undefined && v !== '')).toString();
+    return request(`/api/shift-items${qs ? `?${qs}` : ''}`);
+  },
+  crearItem: (body) => request('/api/shift-items', { method: 'POST', body }),
+  actualizarItem: (id, body) => request(`/api/shift-items/${id}`, { method: 'PATCH', body }),
+  seguimientoItem: (id, texto) => request(`/api/shift-items/${id}/seguimiento`, { method: 'POST', body: { texto } }),
+  resolverItem: (id, resolucion) => request(`/api/shift-items/${id}/resolver`, { method: 'POST', body: { resolucion } }),
+  reabrirItem: (id) => request(`/api/shift-items/${id}/reabrir`, { method: 'POST' }),
+
   zonales: () => request('/api/zonales'),
   crearZonal: (body) => request('/api/zonales', { method: 'POST', body }),
   actualizarZonal: (id, body) => request(`/api/zonales/${id}`, { method: 'PUT', body }),

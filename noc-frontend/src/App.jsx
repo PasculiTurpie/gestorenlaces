@@ -5,6 +5,7 @@ import AlarmasAdmin from './components/admin/AlarmasAdmin.jsx';
 import EnlacesAdmin from './components/admin/EnlacesAdmin.jsx';
 import NodosAdmin from './components/admin/NodosAdmin.jsx';
 import TiposAdmin from './components/admin/TiposAdmin.jsx';
+import NceAdmin from './components/admin/NceAdmin.jsx';
 import SistemaAdmin from './components/admin/SistemaAdmin.jsx';
 import ServiciosAdmin from './components/servicios/ServiciosAdmin.jsx';
 import UsuariosAdmin from './components/admin/UsuariosAdmin.jsx';
@@ -42,6 +43,7 @@ export default function App() {
             <Route path="tipos" element={<TiposAdmin />} />
             <Route path="zonales" element={<ZonalesAdmin />} />
             <Route path="alarmas" element={<AlarmasAdmin />} />
+            <Route path="nce" element={<NceAdmin />} />
             <Route path="sistema" element={<SistemaAdmin />} />
           </Route>
           <Route path="*" element={<Navigate to="/" replace />} />

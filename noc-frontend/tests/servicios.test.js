@@ -49,3 +49,55 @@ test('tiempo real: los cambios de servicios se anotan sin molestar con avisos', 
   assert.deepEqual(describirEvento('services:changed', p('importado', { creados: 3, actualizados: 2 }), 'u1'), { texto: 'Sofía importó servicios (3 nuevos, 2 actualizados)', nivel: 'info', notificar: false });
   assert.equal(describirEvento('services:changed', p('editado'), 'u1').texto, 'Sofía editó un servicio'); assert.equal(describirEvento('services:changed', p('otra-cosa'), 'u1').texto, 'Sofía actualizó los servicios');
 });
+
+// ===================================================================== integración con iMaster NCE
+import { enriquecerAlarmas, estadoConexion, marcaPaso, resumenAlarmas, tipificacionDe } from '../src/lib/nce.js';
+
+test('NCE: estado de la conexión, de menos a más grave', () => {
+  const base = { configurado: true, habilitado: true, ultima_ok: '2026-10-21T15:00:00Z', ultimo_error: null };
+  assert.equal(estadoConexion(null).clave, 'cargando'); assert.deepEqual(estadoConexion({ error_configuracion: 'x', configurado: true }), { clave: 'config', etiqueta: 'Configuración inválida', nivel: 'error' }, 'una configuración inválida manda sobre todo');
+  assert.equal(estadoConexion({ configurado: false, habilitado: false }).clave, 'sin_config'); assert.equal(estadoConexion({ ...base, habilitado: false }).clave, 'desactivada');
+  assert.equal(estadoConexion({ ...base, ultima_ok: null }).clave, 'esperando'); assert.deepEqual(estadoConexion(base), { clave: 'ok', etiqueta: 'Conectado', nivel: 'ok' });
+  assert.equal(estadoConexion({ ...base, ultimo_error: { codigo: 'RED' } }).etiqueta, 'Con errores (mostrando la última lectura)'); assert.equal(estadoConexion({ ...base, ultima_ok: null, ultimo_error: { codigo: 'AUTH' } }).etiqueta, 'Con errores');
+});
+
+test('NCE: cada alarma leída se une a su tipificación y a su enlace de la app', () => {
+  const cat = [{ _id: 't1', codigo: 'R_LOS', activo: true }, { _id: 't2', codigo: 'OSC_LOS', activo: false }, { _id: 't3', codigo: 'FAN_FAIL' }];
+  const enlaces = { e1: { _id: 'e1', id_enlace: 'ENL-VLDV-LANC-01' } };
+  assert.equal(tipificacionDe({ codigo: 'R_LOS' }, cat)._id, 't1'); assert.equal(tipificacionDe({ codigo: 'OSC_LOS' }, cat), null, 'una tipificación desactivada no cuenta'); assert.equal(tipificacionDe({ codigo: 'FAN_FAIL' }, cat)._id, 't3', 'sin campo activo = activa'); assert.equal(tipificacionDe({ codigo: 'RARA' }, cat), null);
+  const lista = enriquecerAlarmas([{ codigo: 'R_LOS', enlace: { enlace: 'ENL-VLDV-LANC-01', sentido: 'ida' } }, { codigo: 'RARA', enlace: { enlace: 'ENL-NO-EXISTE-01', sentido: null } }, { codigo: 'FAN_FAIL', enlace: null }], cat, enlaces);
+  assert.deepEqual([lista[0].tipificacion._id, lista[0].enlaceApp._id], ['t1', 'e1']); assert.deepEqual([lista[1].tipificacion, lista[1].enlaceApp], [null, null], 'una regla que apunta a un enlace que no existe no inventa nada'); assert.equal(lista[2].enlaceApp, null);
+  assert.deepEqual(resumenAlarmas(lista), { total: 3, conEnlace: 2, sinEnlace: 1, sinTipificar: 1 });
+  assert.deepEqual([{ ok: true }, { ok: false }, { omitido: true }].map(marcaPaso), ['✓', '✗', '–']);
+});
+
+// ===================================================================== ítems de atención del turno
+import { aPayloadItem, cambiosItem, etiquetaTurnoIngreso, formularioItem, TITULOS_SUGERIDOS, ultimoSeguimiento, validarItem } from '../src/lib/items.js';
+
+test('ítems de atención: ticket y descripción son obligatorios, el título es libre', () => {
+  assert.deepEqual(validarItem(formularioItem()), { titulo: 'Escriba qué hay que atender (mín. 3 caracteres)', ticket: 'El número de ticket es obligatorio', descripcion: 'Describa el ítem (mín. 3 caracteres)' });
+  const ok = { titulo: 'Corte de cable secundario', ticket: 'INC0012999', descripcion: 'Tramo norte' };
+  assert.deepEqual(validarItem(ok), {}); assert.deepEqual(Object.keys(validarItem({ ...ok, ticket: '   ' })), ['ticket'], 'un ticket en blanco no vale');
+  assert.deepEqual(validarItem({ ...ok, titulo: 'Algo que no está en la lista' }), {}, 'cualquier título sirve');
+  assert.ok(TITULOS_SUGERIDOS.includes('Corte de cable secundario') && TITULOS_SUGERIDOS.includes('Corte de energía') && TITULOS_SUGERIDOS.includes('Otro'));
+  assert.deepEqual(aPayloadItem({ titulo: '  Corte de energía ', ticket: ' T1 ', descripcion: ' Sin luz ' }), { titulo: 'Corte de energía', ticket: 'T1', descripcion: 'Sin luz' }, 'sin espacios sobrantes');
+});
+
+test('ítems de atención: solo se envía lo que cambió', () => {
+  const item = { titulo: 'Corte de energía', ticket: 'T1', descripcion: 'Sin luz' };
+  assert.deepEqual(cambiosItem(item, formularioItem(item)), {}); assert.deepEqual(cambiosItem(item, { ...formularioItem(item), ticket: ' T2 ' }), { ticket: 'T2' });
+  assert.deepEqual(cambiosItem(item, { titulo: 'Corte de energía en sala 2', ticket: 'T1', descripcion: 'Sin luz' }), { titulo: 'Corte de energía en sala 2' });
+});
+
+test('ítems de atención: en qué turno se ingresó y la última nota', () => {
+  assert.equal(etiquetaTurnoIngreso({ turno_ingreso: { tipo_turno: 'Noche', fecha_turno: '2026-10-20' } }), 'turno noche del 20-10-26'); assert.equal(etiquetaTurnoIngreso({ turno_ingreso: { tipo_turno: 'Mañana' } }), 'turno mañana');
+  assert.equal(etiquetaTurnoIngreso({}), null); assert.equal(ultimoSeguimiento({ seguimiento: [] }), null); assert.equal(ultimoSeguimiento({ seguimiento: [{ texto: 'a' }, { texto: 'b' }] }).texto, 'b');
+});
+
+test('ítems de atención: todos se enteran en vivo, salvo quien hizo el cambio', () => {
+  const p = (accion, por) => ({ accion, titulo: 'Corte de energía', ticket: 'INC1', por });
+  const e = describirEvento('item:changed', p('creado', { id: 'u9', nombre: 'Marcos' }), 'u1'); assert.deepEqual([e.texto, e.nivel, e.notificar], ['Marcos ingresó el ítem «Corte de energía» (ticket INC1)', 'warn', true]);
+  assert.equal(describirEvento('item:changed', p('creado', { id: 'u1', nombre: 'Yo' }), 'u1').notificar, false);
+  assert.match(describirEvento('item:changed', p('resuelto', { id: 'u9', nombre: 'Marcos' }), 'u1').texto, /Marcos resolvió el ítem/); assert.equal(describirEvento('item:changed', p('resuelto', { id: 'u9', nombre: 'M' }), 'u1').nivel, 'info');
+  assert.match(describirEvento('item:changed', p('seguimiento', { id: 'u9', nombre: 'M' }), 'u1').texto, /agregó seguimiento al ítem/);
+});

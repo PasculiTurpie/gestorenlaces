@@ -8,6 +8,8 @@ import alarmTypeRoutes from './routes/alarmType.routes.js';
 import authRoutes from './routes/auth.routes.js';
 import incidentRoutes from './routes/incident.routes.js';
 import linkRoutes from './routes/link.routes.js';
+import nceRoutes from './routes/nce.routes.js';
+import shiftItemRoutes from './routes/shiftItem.routes.js';
 import serviceRoutes from './routes/service.routes.js';
 import maintenanceRoutes from './routes/maintenance.routes.js';
 import linkTypeRoutes from './routes/linkType.routes.js';
@@ -40,6 +42,8 @@ export function createApp() {
   app.use('/api/sistema', sistemaRoutes);
   app.use('/api/maintenance', maintenanceRoutes);
   app.use('/api/services', serviceRoutes);
+  app.use('/api/shift-items', shiftItemRoutes);
+  app.use('/api/integraciones/nce', nceRoutes);
 
   app.use(notFound);
   app.use(errorHandler);

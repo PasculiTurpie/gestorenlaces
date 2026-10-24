@@ -2,6 +2,7 @@ import { env } from '../config/env.js';
 import { descripcionHorarios, fechaDelTurno } from '../config/turnos.js';
 import { IncidenceLog } from '../models/IncidenceLog.js';
 import { Link } from '../models/Link.js';
+import { ShiftItem } from '../models/ShiftItem.js';
 import { ShiftReport } from '../models/ShiftReport.js';
 import { emitToNoc } from '../sockets/index.js';
 import { AppError, asyncHandler } from '../utils/errors.js';
@@ -197,7 +198,10 @@ export const imprimible = asyncHandler(async (req, res) => {
     .sort({ inicio: 1 })
     .lean();
 
-  const html = renderShiftHtml({ acta: poblada.toJSON(), incidencias, tz: env.appTimezone, ahora });
+  // ítems de atención transversales: los ingresados en el turno y los que seguían abiertos al cerrarlo
+  const items = await ShiftItem.find({ createdAt: { $lte: hasta }, $or: [{ estado: 'Abierto' }, { resuelto_en: { $gt: acta.fecha_inicio } }] }).sort({ createdAt: 1 }).lean();
+
+  const html = renderShiftHtml({ acta: poblada.toJSON(), incidencias, itemsAtencion: items, tz: env.appTimezone, ahora });
   res
     .status(200)
     .set('Content-Type', 'text/html; charset=utf-8')
